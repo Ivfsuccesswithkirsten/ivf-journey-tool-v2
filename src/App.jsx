@@ -55,6 +55,9 @@ const FocusSection = ({ title, color, items }) => {
 };
 
 const IVFJourneyTool = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [step, setStep] = useState('welcome');
   const [section, setSection] = useState(1);
   const [activeTab, setActiveTab] = useState('plan');
@@ -70,7 +73,7 @@ const IVFJourneyTool = () => {
   const [questionSearch, setQuestionSearch] = useState('');
 
   // PASSWORD PROTECTION - Change this password to whatever you want
-  const CORRECT_PASSWORD = 'Embryo2026!';
+  const CORRECT_PASSWORD = 'embryo2025';
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -131,6 +134,7 @@ const IVFJourneyTool = () => {
       </div>
     );
   }
+
   const handleMulti = (field, value) => {
     setData(prev => ({
       ...prev,
