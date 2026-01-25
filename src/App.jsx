@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, ChevronRight, Target, CheckCircle, Edit2, X, ChevronDown, ChevronUp, Headphones, BookOpen, TrendingUp, Search, Award, Users, LogOut } from 'lucide-react';
+import { Heart, ChevronRight, Target, CheckCircle, Edit2, X, ChevronDown, ChevronUp, Headphones, BookOpen, TrendingUp, Search, Award, Users, LogOut, AlertCircle } from 'lucide-react';
+
+// Medical Disclaimer Component - appears at bottom of every page
+const MedicalDisclaimer = () => {
+  return (
+    <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+      <div className="flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-xs text-gray-600 leading-relaxed">
+            <strong className="text-gray-700">Medical Disclaimer:</strong> This tool provides educational information only and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider before starting any supplement protocol or making changes to your fertility treatment plan. Individual results may vary.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const FocusSection = ({ title, color, items }) => {
   const [expanded, setExpanded] = useState({});
@@ -76,6 +92,14 @@ const IVFJourneyTool = () => {
 
   // MASTER ACCESS CODE - This is your admin code to access the tool
   const MASTER_ACCESS_CODE = 'Embryo2026!';
+
+  // MEDITATION AUDIO LINKS - Update these URLs with your actual meditation file links
+  const MEDITATION_LINKS = [
+    { name: '5-Minute Fertility Calm', url: 'https://yourwebsite.com/meditations/5-min.mp3' },
+    { name: '10-Minute Deep Relaxation', url: 'https://yourwebsite.com/meditations/10-min.mp3' },
+    { name: 'IVF Preparation', url: 'https://yourwebsite.com/meditations/ivf-prep.mp3' },
+    { name: 'Two Week Wait Support', url: 'https://yourwebsite.com/meditations/tww.mp3' }
+  ];
 
   // Load user data when they log in
   useEffect(() => {
@@ -323,7 +347,7 @@ const IVFJourneyTool = () => {
   if (step === 'welcome') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
-        <div className="max-w-2xl mx-auto pt-12">
+        <div className="max-w-2xl mx-auto pt-12 pb-12">
           <div className="flex justify-end mb-4">
             <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
               <LogOut className="w-4 h-4" />
@@ -352,11 +376,13 @@ const IVFJourneyTool = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border p-8">
+          <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
             <button onClick={() => setStep('assessment')} className="w-full bg-rose-500 hover:bg-rose-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2">
               Start Assessment <ChevronRight className="w-5 h-5" />
             </button>
           </div>
+
+          <MedicalDisclaimer />
         </div>
       </div>
     );
@@ -367,7 +393,7 @@ const IVFJourneyTool = () => {
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
-        <div className="max-w-3xl mx-auto pt-8">
+        <div className="max-w-3xl mx-auto pt-8 pb-12">
           <div className="flex justify-end mb-4">
             <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
               <LogOut className="w-4 h-4" />
@@ -384,7 +410,7 @@ const IVFJourneyTool = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border p-8">
+          <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
             {section === 1 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-light text-gray-800 mb-6">Basic IVF Context</h2>
@@ -499,6 +525,8 @@ const IVFJourneyTool = () => {
               )}
             </div>
           </div>
+
+          <MedicalDisclaimer />
         </div>
       </div>
     );
@@ -509,7 +537,7 @@ const IVFJourneyTool = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto pb-12">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Heart className="w-6 h-6 text-rose-500" />
@@ -618,12 +646,7 @@ const IVFJourneyTool = () => {
                     title="Stress Management" 
                     color="blue"
                     items={[
-                      { label: 'Daily meditation 10min', detail: 'Try Insight Timer, Headspace, Calm. Start with 5min if 10 feels long. Best times: morning or evening. Consistency over duration.', hasAudio: true, audioNote: 'Custom fertility meditation audios:', audioLinks: [
-                        { name: '5-Minute Fertility Calm', url: 'YOUR_WEBSITE_URL/meditations/5-min' },
-                        { name: '10-Minute Deep Relaxation', url: 'YOUR_WEBSITE_URL/meditations/10-min' },
-                        { name: 'IVF Preparation', url: 'YOUR_WEBSITE_URL/meditations/prep' },
-                        { name: 'Two Week Wait', url: 'YOUR_WEBSITE_URL/meditations/tww' }
-                      ]},
+                      { label: 'Daily meditation 10min', detail: 'Try Insight Timer, Headspace, Calm. Start with 5min if 10 feels long. Best times: morning or evening. Consistency over duration.', hasAudio: true, audioNote: 'Custom fertility meditation audios:', audioLinks: MEDITATION_LINKS},
                       { label: 'Set boundaries', detail: 'OK to skip baby showers, decline questions, limit social media. Script: I appreciate your interest, but IVF is private. I will share when ready. Protect your peace.' },
                       { label: 'Get support', detail: 'Therapist specializing in fertility (Psychology Today), support groups (Resolve.org), trusted friends. Partner support is key - schedule regular check-ins.' },
                       { label: 'Couple connection', detail: 'Schedule weekly non-IVF dates (even 30min walk). Talk feelings, not just logistics. Physical intimacy without pressure. Consider couples counseling if struggling.' }
@@ -632,232 +655,253 @@ const IVFJourneyTool = () => {
                 </div>
               </div>
 
+              <MedicalDisclaimer />
             </>
           )}
 
           {activeTab === 'today' && (
-            <div className="bg-white rounded-2xl shadow-sm border p-8">
-              <h2 className="text-2xl font-light mb-2">Today's Check-in</h2>
-              <p className="text-gray-600 text-sm mb-6">Building consistency, one day at a time</p>
-              
-              <div className="space-y-4">
-                <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                  <input type="checkbox" checked={todayCheckin.supplements} onChange={() => {
-                    setTodayCheckin({...todayCheckin, supplements: !todayCheckin.supplements});
-                    if (!todayCheckin.supplements) {
-                      setData(prev => ({...prev, progressTracking: {...prev.progressTracking, supplementDays: prev.progressTracking.supplementDays + 1}}));
-                    }
-                  }} className="w-6 h-6 text-rose-500 rounded" />
-                  <div>
-                    <p className="font-medium text-gray-800">Took my supplements</p>
-                    <p className="text-xs text-gray-600">Building egg and sperm quality takes consistency</p>
-                  </div>
-                </label>
+            <>
+              <div className="bg-white rounded-2xl shadow-sm border p-8">
+                <h2 className="text-2xl font-light mb-2">Today's Check-in</h2>
+                <p className="text-gray-600 text-sm mb-6">Building consistency, one day at a time</p>
+                
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                    <input type="checkbox" checked={todayCheckin.supplements} onChange={() => {
+                      setTodayCheckin({...todayCheckin, supplements: !todayCheckin.supplements});
+                      if (!todayCheckin.supplements) {
+                        setData(prev => ({...prev, progressTracking: {...prev.progressTracking, supplementDays: prev.progressTracking.supplementDays + 1}}));
+                      }
+                    }} className="w-6 h-6 text-rose-500 rounded" />
+                    <div>
+                      <p className="font-medium text-gray-800">Took my supplements</p>
+                      <p className="text-xs text-gray-600">Building egg and sperm quality takes consistency</p>
+                    </div>
+                  </label>
 
-                <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                  <input type="checkbox" checked={todayCheckin.meditation} onChange={() => {
-                    setTodayCheckin({...todayCheckin, meditation: !todayCheckin.meditation});
-                    if (!todayCheckin.meditation) {
-                      setData(prev => ({...prev, progressTracking: {...prev.progressTracking, meditationDays: prev.progressTracking.meditationDays + 1}}));
-                    }
-                  }} className="w-6 h-6 text-rose-500 rounded" />
-                  <div>
-                    <p className="font-medium text-gray-800">Practiced mindfulness or meditation</p>
-                    <p className="text-xs text-gray-600">Even 5 minutes counts</p>
-                  </div>
-                </label>
+                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                    <input type="checkbox" checked={todayCheckin.meditation} onChange={() => {
+                      setTodayCheckin({...todayCheckin, meditation: !todayCheckin.meditation});
+                      if (!todayCheckin.meditation) {
+                        setData(prev => ({...prev, progressTracking: {...prev.progressTracking, meditationDays: prev.progressTracking.meditationDays + 1}}));
+                      }
+                    }} className="w-6 h-6 text-rose-500 rounded" />
+                    <div>
+                      <p className="font-medium text-gray-800">Practiced mindfulness or meditation</p>
+                      <p className="text-xs text-gray-600">Even 5 minutes counts</p>
+                    </div>
+                  </label>
 
-                <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                  <input type="checkbox" checked={todayCheckin.exercise} onChange={() => {
-                    setTodayCheckin({...todayCheckin, exercise: !todayCheckin.exercise});
-                    if (!todayCheckin.exercise) {
-                      setData(prev => ({...prev, progressTracking: {...prev.progressTracking, exerciseDays: prev.progressTracking.exerciseDays + 1}}));
-                    }
-                  }} className="w-6 h-6 text-rose-500 rounded" />
-                  <div>
-                    <p className="font-medium text-gray-800">Moved my body (30min)</p>
-                    <p className="text-xs text-gray-600">Walking, yoga, swimming - gentle movement</p>
-                  </div>
-                </label>
-              </div>
+                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                    <input type="checkbox" checked={todayCheckin.exercise} onChange={() => {
+                      setTodayCheckin({...todayCheckin, exercise: !todayCheckin.exercise});
+                      if (!todayCheckin.exercise) {
+                        setData(prev => ({...prev, progressTracking: {...prev.progressTracking, exerciseDays: prev.progressTracking.exerciseDays + 1}}));
+                      }
+                    }} className="w-6 h-6 text-rose-500 rounded" />
+                    <div>
+                      <p className="font-medium text-gray-800">Moved my body (30min)</p>
+                      <p className="text-xs text-gray-600">Walking, yoga, swimming - gentle movement</p>
+                    </div>
+                  </label>
+                </div>
 
-              <div className="mt-6 p-6 bg-gradient-to-r from-purple-50 to-rose-50 rounded-xl">
-                <h3 className="font-medium text-gray-800 mb-3">Your commitment over time adds up</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-white rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-rose-500">{data.progressTracking.supplementDays}</p>
-                    <p className="text-xs text-gray-600 mt-1">Days on supplements</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-purple-500">{data.progressTracking.meditationDays}</p>
-                    <p className="text-xs text-gray-600 mt-1">Mindfulness sessions</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-blue-500">{data.progressTracking.exerciseDays}</p>
-                    <p className="text-xs text-gray-600 mt-1">Movement days</p>
+                <div className="mt-6 p-6 bg-gradient-to-r from-purple-50 to-rose-50 rounded-xl">
+                  <h3 className="font-medium text-gray-800 mb-3">Your commitment over time adds up</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-rose-500">{data.progressTracking.supplementDays}</p>
+                      <p className="text-xs text-gray-600 mt-1">Days on supplements</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-purple-500">{data.progressTracking.meditationDays}</p>
+                      <p className="text-xs text-gray-600 mt-1">Mindfulness sessions</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 text-center">
+                      <p className="text-2xl font-bold text-blue-500">{data.progressTracking.exerciseDays}</p>
+                      <p className="text-xs text-gray-600 mt-1">Movement days</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              <MedicalDisclaimer />
+            </>
           )}
 
           {activeTab === 'progress' && (
-            <div className="bg-white rounded-2xl shadow-sm border p-8">
-              <h2 className="text-2xl font-light text-gray-800 mb-2">Your Progress</h2>
-              <p className="text-gray-600 text-sm mb-6">Every small action is an investment in your future</p>
-              
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="p-6 bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Award className="w-6 h-6 text-rose-600" />
-                    <p className="font-medium text-gray-800">Supplement Streak</p>
+            <>
+              <div className="bg-white rounded-2xl shadow-sm border p-8">
+                <h2 className="text-2xl font-light text-gray-800 mb-2">Your Progress</h2>
+                <p className="text-gray-600 text-sm mb-6">Every small action is an investment in your future</p>
+                
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="p-6 bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Award className="w-6 h-6 text-rose-600" />
+                      <p className="font-medium text-gray-800">Supplement Streak</p>
+                    </div>
+                    <p className="text-3xl font-bold text-rose-600">{data.progressTracking.supplementDays} days</p>
+                    <p className="text-xs text-gray-600 mt-2">Keep going! Peak benefit at 90+ days</p>
                   </div>
-                  <p className="text-3xl font-bold text-rose-600">{data.progressTracking.supplementDays} days</p>
-                  <p className="text-xs text-gray-600 mt-2">Keep going! Peak benefit at 90+ days</p>
-                </div>
 
-                <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Heart className="w-6 h-6 text-purple-600" />
-                    <p className="font-medium text-gray-800">Self-Care Sessions</p>
+                  <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Heart className="w-6 h-6 text-purple-600" />
+                      <p className="font-medium text-gray-800">Self-Care Sessions</p>
+                    </div>
+                    <p className="text-3xl font-bold text-purple-600">{data.progressTracking.meditationDays}</p>
+                    <p className="text-xs text-gray-600 mt-2">You are prioritizing your wellbeing</p>
                   </div>
-                  <p className="text-3xl font-bold text-purple-600">{data.progressTracking.meditationDays}</p>
-                  <p className="text-xs text-gray-600 mt-2">You are prioritizing your wellbeing</p>
-                </div>
 
-                <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <TrendingUp className="w-6 h-6 text-blue-600" />
-                    <p className="font-medium text-gray-800">Active Days</p>
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <TrendingUp className="w-6 h-6 text-blue-600" />
+                      <p className="font-medium text-gray-800">Active Days</p>
+                    </div>
+                    <p className="text-3xl font-bold text-blue-600">{data.progressTracking.exerciseDays}</p>
+                    <p className="text-xs text-gray-600 mt-2">Movement supports blood flow and mood</p>
                   </div>
-                  <p className="text-3xl font-bold text-blue-600">{data.progressTracking.exerciseDays}</p>
-                  <p className="text-xs text-gray-600 mt-2">Movement supports blood flow and mood</p>
                 </div>
               </div>
-            </div>
+
+              <MedicalDisclaimer />
+            </>
           )}
 
           {activeTab === 'answers' && (
-            <div className="bg-white rounded-2xl shadow-sm border p-8">
-              <h2 className="text-2xl font-light mb-6">Quick Answers</h2>
-              <div className="relative mb-6">
-                <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                <input type="text" value={questionSearch} onChange={(e) => setQuestionSearch(e.target.value)} placeholder="Search questions" className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
+            <>
+              <div className="bg-white rounded-2xl shadow-sm border p-8">
+                <h2 className="text-2xl font-light mb-6">Quick Answers</h2>
+                <div className="relative mb-6">
+                  <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <input type="text" value={questionSearch} onChange={(e) => setQuestionSearch(e.target.value)} placeholder="Search questions" className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
+                </div>
+                <div className="space-y-3">
+                  {faqs.filter(faq => questionSearch === '' || faq.q.toLowerCase().includes(questionSearch.toLowerCase())).map((faq, i) => (
+                    <details key={i} className="group border rounded-lg">
+                      <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+                        <span className="font-medium text-gray-800">{faq.q}</span>
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      </summary>
+                      <div className="p-4 bg-gray-50 border-t">
+                        <p className="text-sm text-gray-700">{faq.a}</p>
+                      </div>
+                    </details>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-3">
-                {faqs.filter(faq => questionSearch === '' || faq.q.toLowerCase().includes(questionSearch.toLowerCase())).map((faq, i) => (
-                  <details key={i} className="group border rounded-lg">
-                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
-                      <span className="font-medium text-gray-800">{faq.q}</span>
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
-                    </summary>
-                    <div className="p-4 bg-gray-50 border-t">
-                      <p className="text-sm text-gray-700">{faq.a}</p>
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </div>
+
+              <MedicalDisclaimer />
+            </>
           )}
 
           {activeTab === 'journal' && (
-            <div className="bg-white rounded-2xl shadow-sm border p-8">
-              <h2 className="text-2xl font-light mb-6">Your Journal</h2>
-              <p className="text-sm text-gray-600 mb-4">A safe space to process your thoughts and feelings</p>
-              <textarea value={journalText} onChange={(e) => setJournalText(e.target.value)} placeholder="How are you feeling today?" rows="6" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none mb-4" />
-              <button onClick={() => {
-                if (journalText.trim()) {
-                  setData({...data, journalEntries: [{date: new Date().toLocaleDateString(), text: journalText}, ...data.journalEntries]});
-                  setJournalText('');
-                }
-              }} className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg">Save Entry</button>
-              <div className="mt-6 space-y-4">
-                <h3 className="font-medium text-gray-800">Previous Entries</h3>
-                {data.journalEntries.length === 0 ? (
-                  <p className="text-gray-500 text-sm py-4">No entries yet. Start journaling to track your journey.</p>
-                ) : (
-                  data.journalEntries.map((entry, i) => (
-                    <div key={i} className="p-4 bg-gray-50 rounded-lg border">
-                      <p className="text-xs text-gray-500 mb-2">{entry.date}</p>
-                      <p className="text-sm text-gray-700">{entry.text}</p>
-                    </div>
-                  ))
-                )}
+            <>
+              <div className="bg-white rounded-2xl shadow-sm border p-8">
+                <h2 className="text-2xl font-light mb-6">Your Journal</h2>
+                <p className="text-sm text-gray-600 mb-4">A safe space to process your thoughts and feelings</p>
+                <textarea value={journalText} onChange={(e) => setJournalText(e.target.value)} placeholder="How are you feeling today?" rows="6" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none mb-4" />
+                <button onClick={() => {
+                  if (journalText.trim()) {
+                    setData({...data, journalEntries: [{date: new Date().toLocaleDateString(), text: journalText}, ...data.journalEntries]});
+                    setJournalText('');
+                  }
+                }} className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg">Save Entry</button>
+                <div className="mt-6 space-y-4">
+                  <h3 className="font-medium text-gray-800">Previous Entries</h3>
+                  {data.journalEntries.length === 0 ? (
+                    <p className="text-gray-500 text-sm py-4">No entries yet. Start journaling to track your journey.</p>
+                  ) : (
+                    data.journalEntries.map((entry, i) => (
+                      <div key={i} className="p-4 bg-gray-50 rounded-lg border">
+                        <p className="text-xs text-gray-500 mb-2">{entry.date}</p>
+                        <p className="text-sm text-gray-700">{entry.text}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
+
+              <MedicalDisclaimer />
+            </>
           )}
 
           {activeTab === 'community' && (
-            <div className="bg-white rounded-2xl shadow-sm border p-8">
-              <h2 className="text-2xl font-light text-gray-800 mb-2">You Are Not Alone</h2>
-              <p className="text-gray-600 text-sm mb-6">Based on our community data (all anonymous)</p>
-              
-              <div className="space-y-6">
-                <div className="p-6 bg-rose-50 rounded-xl border border-rose-200">
-                  <h3 className="font-medium text-gray-800 mb-3">Women with your pattern</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Users className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-700"><span className="font-medium">127 women</span> with similar embryo outcomes have used this program</p>
+            <>
+              <div className="bg-white rounded-2xl shadow-sm border p-8">
+                <h2 className="text-2xl font-light text-gray-800 mb-2">You Are Not Alone</h2>
+                <p className="text-gray-600 text-sm mb-6">Based on our community data (all anonymous)</p>
+                
+                <div className="space-y-6">
+                  <div className="p-6 bg-rose-50 rounded-xl border border-rose-200">
+                    <h3 className="font-medium text-gray-800 mb-3">Women with your pattern</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Users className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-700"><span className="font-medium">127 women</span> with similar embryo outcomes have used this program</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-700"><span className="font-medium">68%</span> reported improved embryo quality in their next cycle</p>
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-700"><span className="font-medium">68%</span> reported improved embryo quality in their next cycle</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Heart className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-gray-700">Average time to optimize: <span className="font-medium">90-120 days</span> before next cycle</p>
+                      <div className="flex items-start gap-3">
+                        <Heart className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-700">Average time to optimize: <span className="font-medium">90-120 days</span> before next cycle</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
-                  <h3 className="font-medium text-gray-800 mb-3">What helped them most</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-sm text-gray-700">Consistent supplement protocol</span>
-                      <span className="text-sm font-medium text-purple-600">92%</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-sm text-gray-700">Stress management practices</span>
-                      <span className="text-sm font-medium text-purple-600">84%</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-sm text-gray-700">Partner involvement in protocol</span>
-                      <span className="text-sm font-medium text-purple-600">76%</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                      <span className="text-sm text-gray-700">Sleep optimization</span>
-                      <span className="text-sm font-medium text-purple-600">71%</span>
+                  <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
+                    <h3 className="font-medium text-gray-800 mb-3">What helped them most</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                        <span className="text-sm text-gray-700">Consistent supplement protocol</span>
+                        <span className="text-sm font-medium text-purple-600">92%</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                        <span className="text-sm text-gray-700">Stress management practices</span>
+                        <span className="text-sm font-medium text-purple-600">84%</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                        <span className="text-sm text-gray-700">Partner involvement in protocol</span>
+                        <span className="text-sm font-medium text-purple-600">76%</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                        <span className="text-sm text-gray-700">Sleep optimization</span>
+                        <span className="text-sm font-medium text-purple-600">71%</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
-                  <h3 className="font-medium text-gray-800 mb-3">Real Stories (Anonymous)</h3>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-700 italic mb-2">"After 2 failed cycles with poor fertilization, I did the 90-day protocol. Next cycle: 8 fertilized instead of 3, and 4 made it to blast. Currently 12 weeks pregnant."</p>
-                      <p className="text-xs text-gray-500">— Age 36, PCOS, 3 cycles</p>
-                    </div>
-                    <div className="p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-700 italic mb-2">"The daily check-ins kept me accountable when I wanted to give up. Knowing others were doing this too helped me stay consistent."</p>
-                      <p className="text-xs text-gray-500">— Age 34, Unexplained, 2 cycles</p>
-                    </div>
-                    <div className="p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-700 italic mb-2">"Getting my partner on board with his protocol made a huge difference. Our fertilization rate jumped from 45% to 78%."</p>
-                      <p className="text-xs text-gray-500">— Age 38, Male factor, 4 cycles</p>
+                  <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
+                    <h3 className="font-medium text-gray-800 mb-3">Real Stories (Anonymous)</h3>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-white rounded-lg">
+                        <p className="text-sm text-gray-700 italic mb-2">"After 2 failed cycles with poor fertilization, I did the 90-day protocol. Next cycle: 8 fertilized instead of 3, and 4 made it to blast. Currently 12 weeks pregnant."</p>
+                        <p className="text-xs text-gray-500">— Age 36, PCOS, 3 cycles</p>
+                      </div>
+                      <div className="p-4 bg-white rounded-lg">
+                        <p className="text-sm text-gray-700 italic mb-2">"The daily check-ins kept me accountable when I wanted to give up. Knowing others were doing this too helped me stay consistent."</p>
+                        <p className="text-xs text-gray-500">— Age 34, Unexplained, 2 cycles</p>
+                      </div>
+                      <div className="p-4 bg-white rounded-lg">
+                        <p className="text-sm text-gray-700 italic mb-2">"Getting my partner on board with his protocol made a huge difference. Our fertilization rate jumped from 45% to 78%."</p>
+                        <p className="text-xs text-gray-500">— Age 38, Male factor, 4 cycles</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              <MedicalDisclaimer />
+            </>
           )}
         </div>
       </div>
