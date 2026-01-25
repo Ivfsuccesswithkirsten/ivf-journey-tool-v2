@@ -75,7 +75,7 @@ const IVFJourneyTool = () => {
   const [questionSearch, setQuestionSearch] = useState('');
 
   // MASTER ACCESS CODE - This is your admin code to access the tool
-  const MASTER_ACCESS_CODE = 'embryo2025';
+  const MASTER_ACCESS_CODE = 'Embryo2026!';
 
   // Load user data when they log in
   useEffect(() => {
