@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Heart, ChevronRight, Target, CheckCircle, Edit2, X, ChevronDown, ChevronUp, Headphones, BookOpen, TrendingUp, Search, Award, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, ChevronRight, Target, CheckCircle, Edit2, X, ChevronDown, ChevronUp, Headphones, BookOpen, TrendingUp, Search, Award, Users, LogOut } from 'lucide-react';
 
 const FocusSection = ({ title, color, items }) => {
   const [expanded, setExpanded] = useState({});
@@ -56,8 +56,10 @@ const FocusSection = ({ title, color, items }) => {
 
 const IVFJourneyTool = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [accessCodeInput, setAccessCodeInput] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [step, setStep] = useState('welcome');
   const [section, setSection] = useState(1);
   const [activeTab, setActiveTab] = useState('plan');
@@ -72,17 +74,87 @@ const IVFJourneyTool = () => {
   const [todayCheckin, setTodayCheckin] = useState({ supplements: false, meditation: false, exercise: false });
   const [questionSearch, setQuestionSearch] = useState('');
 
-  // PASSWORD PROTECTION - Change this password to whatever you want
-  const CORRECT_PASSWORD = 'Embryo2026!';
+  // MASTER ACCESS CODE - This is your admin code to access the tool
+  const MASTER_ACCESS_CODE = 'embryo2025';
 
-  const handlePasswordSubmit = (e) => {
+  // Load user data when they log in
+  useEffect(() => {
+    if (isAuthenticated && userEmail) {
+      loadUserData(userEmail);
+    }
+  }, [isAuthenticated, userEmail]);
+
+  // Save data whenever it changes
+  useEffect(() => {
+    if (isAuthenticated && userEmail) {
+      saveUserData(userEmail, data, step, section, activeTab);
+    }
+  }, [data, step, section, activeTab, isAuthenticated, userEmail]);
+
+  const loadUserData = (email) => {
+    try {
+      const savedData = localStorage.getItem(`ivf_journey_${email}`);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        setData(parsed.data || data);
+        setStep(parsed.step || 'welcome');
+        setSection(parsed.section || 1);
+        setActiveTab(parsed.activeTab || 'plan');
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const saveUserData = (email, userData, currentStep, currentSection, currentTab) => {
+    try {
+      const dataToSave = {
+        data: userData,
+        step: currentStep,
+        section: currentSection,
+        activeTab: currentTab,
+        lastUpdated: new Date().toISOString()
+      };
+      localStorage.setItem(`ivf_journey_${email}`, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Error saving user data:', error);
+    }
+  };
+
+  const handleLogin = (e) => {
     e.preventDefault();
-    if (passwordInput === CORRECT_PASSWORD) {
+    const email = emailInput.trim().toLowerCase();
+    const code = accessCodeInput.trim();
+
+    if (!email || !code) {
+      setLoginError('Please enter both email and access code');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setLoginError('Please enter a valid email address');
+      return;
+    }
+
+    if (code === MASTER_ACCESS_CODE) {
       setIsAuthenticated(true);
-      setPasswordError('');
+      setUserEmail(email);
+      setLoginError('');
+      setEmailInput('');
+      setAccessCodeInput('');
     } else {
-      setPasswordError('Incorrect password. Please try again.');
-      setPasswordInput('');
+      setLoginError('Incorrect access code. Please check your code and try again.');
+      setAccessCodeInput('');
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out? Your data is saved and will be here when you return.')) {
+      setIsAuthenticated(false);
+      setUserEmail('');
+      setStep('welcome');
+      setSection(1);
+      setActiveTab('plan');
     }
   };
 
@@ -96,23 +168,35 @@ const IVFJourneyTool = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
                 <Heart className="w-8 h-8 text-rose-500" />
               </div>
-              <h1 className="text-2xl font-light text-gray-800 mb-2">Welcome Back</h1>
-              <p className="text-gray-600 text-sm">Enter your access code to continue your journey</p>
+              <h1 className="text-2xl font-light text-gray-800 mb-2">Welcome to Your Journey</h1>
+              <p className="text-gray-600 text-sm">Enter your email and access code to continue</p>
             </div>
 
-            <form onSubmit={handlePasswordSubmit}>
+            <form onSubmit={handleLogin}>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2">Your Email</label>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
+                  autoFocus
+                />
+                <p className="text-xs text-gray-500 mt-1">This is your unique identifier - use the same email each time</p>
+              </div>
+
               <div className="mb-6">
                 <label className="block text-gray-700 font-medium mb-2">Access Code</label>
                 <input
                   type="password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
+                  value={accessCodeInput}
+                  onChange={(e) => setAccessCodeInput(e.target.value)}
                   placeholder="Enter your access code"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
-                  autoFocus
                 />
-                {passwordError && (
-                  <p className="text-red-500 text-sm mt-2">{passwordError}</p>
+                {loginError && (
+                  <p className="text-red-500 text-sm mt-2">{loginError}</p>
                 )}
               </div>
 
@@ -120,13 +204,16 @@ const IVFJourneyTool = () => {
                 type="submit"
                 className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-xl font-medium transition-colors"
               >
-                Access Tool
+                Access Your Journey
               </button>
             </form>
 
             <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center mb-3">
+                Your data is saved to your browser and tied to your email. Use the same email each time to access your saved progress.
+              </p>
               <p className="text-xs text-gray-500 text-center">
-                Don't have access? This tool is available with the Embryo Quality course.
+                Don't have an access code? This tool is available with the Embryo Quality course.
               </p>
             </div>
           </div>
@@ -237,12 +324,20 @@ const IVFJourneyTool = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
         <div className="max-w-2xl mx-auto pt-12">
+          <div className="flex justify-end mb-4">
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
+          </div>
+          
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
               <Heart className="w-8 h-8 text-rose-500" />
             </div>
             <h1 className="text-3xl font-light text-gray-800 mb-3">Your Complete IVF Journey</h1>
             <p className="text-gray-600 max-w-md mx-auto">Your personal fertility coach, available 24/7</p>
+            <p className="text-sm text-gray-500 mt-2">Logged in as: {userEmail}</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
@@ -273,6 +368,13 @@ const IVFJourneyTool = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
         <div className="max-w-3xl mx-auto pt-8">
+          <div className="flex justify-end mb-4">
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
+          </div>
+          
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-2 flex-1 bg-gray-200 rounded-full">
@@ -413,9 +515,15 @@ const IVFJourneyTool = () => {
             <Heart className="w-6 h-6 text-rose-500" />
             <h1 className="text-2xl font-light text-gray-800">Your Journey</h1>
           </div>
-          <button onClick={() => setStep('assessment')} className="text-sm text-rose-600 hover:text-rose-700 flex items-center gap-1">
-            <Edit2 className="w-4 h-4" /> Update
-          </button>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setStep('assessment')} className="text-sm text-rose-600 hover:text-rose-700 flex items-center gap-1">
+              <Edit2 className="w-4 h-4" /> Update
+            </button>
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+              <LogOut className="w-4 h-4" />
+              Log Out
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
@@ -534,7 +642,12 @@ const IVFJourneyTool = () => {
               
               <div className="space-y-4">
                 <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                  <input type="checkbox" checked={todayCheckin.supplements} onChange={() => setTodayCheckin({...todayCheckin, supplements: !todayCheckin.supplements})} className="w-6 h-6 text-rose-500 rounded" />
+                  <input type="checkbox" checked={todayCheckin.supplements} onChange={() => {
+                    setTodayCheckin({...todayCheckin, supplements: !todayCheckin.supplements});
+                    if (!todayCheckin.supplements) {
+                      setData(prev => ({...prev, progressTracking: {...prev.progressTracking, supplementDays: prev.progressTracking.supplementDays + 1}}));
+                    }
+                  }} className="w-6 h-6 text-rose-500 rounded" />
                   <div>
                     <p className="font-medium text-gray-800">Took my supplements</p>
                     <p className="text-xs text-gray-600">Building egg and sperm quality takes consistency</p>
@@ -542,7 +655,12 @@ const IVFJourneyTool = () => {
                 </label>
 
                 <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                  <input type="checkbox" checked={todayCheckin.meditation} onChange={() => setTodayCheckin({...todayCheckin, meditation: !todayCheckin.meditation})} className="w-6 h-6 text-rose-500 rounded" />
+                  <input type="checkbox" checked={todayCheckin.meditation} onChange={() => {
+                    setTodayCheckin({...todayCheckin, meditation: !todayCheckin.meditation});
+                    if (!todayCheckin.meditation) {
+                      setData(prev => ({...prev, progressTracking: {...prev.progressTracking, meditationDays: prev.progressTracking.meditationDays + 1}}));
+                    }
+                  }} className="w-6 h-6 text-rose-500 rounded" />
                   <div>
                     <p className="font-medium text-gray-800">Practiced mindfulness or meditation</p>
                     <p className="text-xs text-gray-600">Even 5 minutes counts</p>
@@ -550,7 +668,12 @@ const IVFJourneyTool = () => {
                 </label>
 
                 <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                  <input type="checkbox" checked={todayCheckin.exercise} onChange={() => setTodayCheckin({...todayCheckin, exercise: !todayCheckin.exercise})} className="w-6 h-6 text-rose-500 rounded" />
+                  <input type="checkbox" checked={todayCheckin.exercise} onChange={() => {
+                    setTodayCheckin({...todayCheckin, exercise: !todayCheckin.exercise});
+                    if (!todayCheckin.exercise) {
+                      setData(prev => ({...prev, progressTracking: {...prev.progressTracking, exerciseDays: prev.progressTracking.exerciseDays + 1}}));
+                    }
+                  }} className="w-6 h-6 text-rose-500 rounded" />
                   <div>
                     <p className="font-medium text-gray-800">Moved my body (30min)</p>
                     <p className="text-xs text-gray-600">Walking, yoga, swimming - gentle movement</p>
@@ -720,15 +843,15 @@ const IVFJourneyTool = () => {
                   <h3 className="font-medium text-gray-800 mb-3">Real Stories (Anonymous)</h3>
                   <div className="space-y-4">
                     <div className="p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-700 italic mb-2">After 2 failed cycles with poor fertilization, I did the 90-day protocol. Next cycle: 8 fertilized instead of 3, and 4 made it to blast. Currently 12 weeks pregnant.</p>
+                      <p className="text-sm text-gray-700 italic mb-2">"After 2 failed cycles with poor fertilization, I did the 90-day protocol. Next cycle: 8 fertilized instead of 3, and 4 made it to blast. Currently 12 weeks pregnant."</p>
                       <p className="text-xs text-gray-500">— Age 36, PCOS, 3 cycles</p>
                     </div>
                     <div className="p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-700 italic mb-2">The daily check-ins kept me accountable when I wanted to give up. Knowing others were doing this too helped me stay consistent.</p>
+                      <p className="text-sm text-gray-700 italic mb-2">"The daily check-ins kept me accountable when I wanted to give up. Knowing others were doing this too helped me stay consistent."</p>
                       <p className="text-xs text-gray-500">— Age 34, Unexplained, 2 cycles</p>
                     </div>
                     <div className="p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-700 italic mb-2">Getting my partner on board with his protocol made a huge difference. Our fertilization rate jumped from 45% to 78%.</p>
+                      <p className="text-sm text-gray-700 italic mb-2">"Getting my partner on board with his protocol made a huge difference. Our fertilization rate jumped from 45% to 78%."</p>
                       <p className="text-xs text-gray-500">— Age 38, Male factor, 4 cycles</p>
                     </div>
                   </div>
