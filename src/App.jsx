@@ -69,6 +69,68 @@ const IVFJourneyTool = () => {
   const [todayCheckin, setTodayCheckin] = useState({ supplements: false, meditation: false, exercise: false });
   const [questionSearch, setQuestionSearch] = useState('');
 
+  // PASSWORD PROTECTION - Change this password to whatever you want
+  const CORRECT_PASSWORD = 'Embryo2026!';
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (passwordInput === CORRECT_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordError('');
+    } else {
+      setPasswordError('Incorrect password. Please try again.');
+      setPasswordInput('');
+    }
+  };
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
+                <Heart className="w-8 h-8 text-rose-500" />
+              </div>
+              <h1 className="text-2xl font-light text-gray-800 mb-2">Welcome Back</h1>
+              <p className="text-gray-600 text-sm">Enter your access code to continue your journey</p>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit}>
+              <div className="mb-6">
+                <label className="block text-gray-700 font-medium mb-2">Access Code</label>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="Enter your access code"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
+                  autoFocus
+                />
+                {passwordError && (
+                  <p className="text-red-500 text-sm mt-2">{passwordError}</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-xl font-medium transition-colors"
+              >
+                Access Tool
+              </button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center">
+                Don't have access? This tool is available with the Embryo Quality course.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const handleMulti = (field, value) => {
     setData(prev => ({
       ...prev,
