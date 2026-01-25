@@ -73,7 +73,7 @@ const IVFJourneyTool = () => {
   const [questionSearch, setQuestionSearch] = useState('');
 
   // PASSWORD PROTECTION - Change this password to whatever you want
-  const CORRECT_PASSWORD = 'embryo2025';
+  const CORRECT_PASSWORD = 'Embryo2026!';
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
