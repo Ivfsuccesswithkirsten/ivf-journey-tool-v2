@@ -192,7 +192,7 @@ const IVFJourneyTool = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
                 <Heart className="w-8 h-8 text-rose-500" />
               </div>
-              <h1 className="text-2xl font-light text-gray-800 mb-2">Welcome to Your Journey</h1>
+              <h1 className="text-2xl font-light text-gray-800 mb-2">Your Personalised IVF Journey</h1>
               <p className="text-gray-600 text-sm">Enter your email and access code to continue</p>
             </div>
 
@@ -359,7 +359,7 @@ const IVFJourneyTool = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
               <Heart className="w-8 h-8 text-rose-500" />
             </div>
-            <h1 className="text-3xl font-light text-gray-800 mb-3">Your Complete IVF Journey</h1>
+            <h1 className="text-3xl font-light text-gray-800 mb-3">Your Personalised IVF Journey</h1>
             <p className="text-gray-600 max-w-md mx-auto">Your personal fertility coach, available 24/7</p>
             <p className="text-sm text-gray-500 mt-2">Logged in as: {userEmail}</p>
           </div>
