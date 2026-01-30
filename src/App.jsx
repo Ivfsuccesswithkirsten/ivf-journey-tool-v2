@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, ChevronRight, Target, CheckCircle, Edit2, X, ChevronDown, ChevronUp, Headphones, BookOpen, TrendingUp, Search, Award, Users, LogOut, AlertCircle } from 'lucide-react';
+import { Heart, ChevronRight, Target, CheckCircle, Edit2, X, ChevronDown, ChevronUp, Headphones, BookOpen, TrendingUp, Search, Award, Users, LogOut, AlertCircle, Send } from 'lucide-react';
 
 // Medical Disclaimer Component - appears at bottom of every page
 const MedicalDisclaimer = () => {
@@ -13,6 +13,15 @@ const MedicalDisclaimer = () => {
           </p>
         </div>
       </div>
+    </div>
+  );
+};
+
+// Supportive Footer Text
+const SupportiveFooter = () => {
+  return (
+    <div className="mt-6 text-center">
+      <p className="text-sm text-gray-500 italic">This space is here to support you, not pressure you.</p>
     </div>
   );
 };
@@ -89,9 +98,20 @@ const IVFJourneyTool = () => {
   const [journalText, setJournalText] = useState('');
   const [todayCheckin, setTodayCheckin] = useState({ supplements: false, meditation: false, exercise: false });
   const [questionSearch, setQuestionSearch] = useState('');
+  
+  // Share Your Story state
+  const [storyForm, setStoryForm] = useState({
+    hadAnotherCycle: '',
+    outcome: '',
+    testimonial: '',
+    age: '',
+    diagnosis: '',
+    cycleCount: ''
+  });
+  const [storySubmitted, setStorySubmitted] = useState(false);
 
   // MASTER ACCESS CODE - This is your admin code to access the tool
-  const MASTER_ACCESS_CODE = 'Embryo2026!';
+  const MASTER_ACCESS_CODE = 'embryo2025';
 
   // MEDITATION AUDIO LINKS - Update these URLs with your actual meditation file links
   const MEDITATION_LINKS = [
@@ -173,13 +193,37 @@ const IVFJourneyTool = () => {
   };
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to log out? Your data is saved and will be here when you return.')) {
+    if (window.confirm('We'll be right here when you come back. Are you sure you want to log out?')) {
       setIsAuthenticated(false);
       setUserEmail('');
       setStep('welcome');
       setSection(1);
       setActiveTab('plan');
     }
+  };
+
+  const handleStorySubmit = (e) => {
+    e.preventDefault();
+    // In a real implementation, this would send to your email or database
+    // For now, we'll just show a success message
+    console.log('Story submitted:', {
+      email: userEmail,
+      ...storyForm,
+      submittedAt: new Date().toISOString()
+    });
+    
+    setStorySubmitted(true);
+    setTimeout(() => {
+      setStorySubmitted(false);
+      setStoryForm({
+        hadAnotherCycle: '',
+        outcome: '',
+        testimonial: '',
+        age: '',
+        diagnosis: '',
+        cycleCount: ''
+      });
+    }, 3000);
   };
 
   // Show login screen if not authenticated
@@ -193,7 +237,7 @@ const IVFJourneyTool = () => {
                 <Heart className="w-8 h-8 text-rose-500" />
               </div>
               <h1 className="text-2xl font-light text-gray-800 mb-2">Your Personalised IVF Journey</h1>
-              <p className="text-gray-600 text-sm">Enter your email and access code to continue</p>
+              <p className="text-gray-600 text-sm">Your private IVF support space — available whenever you need it.</p>
             </div>
 
             <form onSubmit={handleLogin}>
@@ -213,7 +257,7 @@ const IVFJourneyTool = () => {
               <div className="mb-6">
                 <label className="block text-gray-700 font-medium mb-2">Access Code</label>
                 <input
-                  type="password"
+                  type="Embryo2026!"
                   value={accessCodeInput}
                   onChange={(e) => setAccessCodeInput(e.target.value)}
                   placeholder="Enter your access code"
@@ -348,7 +392,8 @@ const IVFJourneyTool = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
         <div className="max-w-2xl mx-auto pt-12 pb-12">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-gray-500 italic">You're doing the best you can — and that's enough for today.</p>
             <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
               <LogOut className="w-4 h-4" />
               Log Out
@@ -382,6 +427,11 @@ const IVFJourneyTool = () => {
             </button>
           </div>
 
+          <div className="text-center mb-4">
+            <p className="text-sm text-gray-500 italic">You don't need to carry this perfectly. You just need support — and you're here.</p>
+          </div>
+
+          <SupportiveFooter />
           <MedicalDisclaimer />
         </div>
       </div>
@@ -394,7 +444,8 @@ const IVFJourneyTool = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
         <div className="max-w-3xl mx-auto pt-8 pb-12">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-gray-500 italic">You're doing the best you can — and that's enough for today.</p>
             <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
               <LogOut className="w-4 h-4" />
               Log Out
@@ -526,6 +577,7 @@ const IVFJourneyTool = () => {
             </div>
           </div>
 
+          <SupportiveFooter />
           <MedicalDisclaimer />
         </div>
       </div>
@@ -541,7 +593,10 @@ const IVFJourneyTool = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Heart className="w-6 h-6 text-rose-500" />
-            <h1 className="text-2xl font-light text-gray-800">Your Journey</h1>
+            <div>
+              <h1 className="text-2xl font-light text-gray-800">Your Journey</h1>
+              <p className="text-xs text-gray-500 italic">You're doing the best you can — and that's enough for today.</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <button onClick={() => setStep('assessment')} className="text-sm text-rose-600 hover:text-rose-700 flex items-center gap-1">
@@ -576,23 +631,36 @@ const IVFJourneyTool = () => {
         <div className="space-y-6">
           {activeTab === 'plan' && (
             <>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 italic">This is your personalised focus — based on your IVF journey, not generic advice.</p>
+              </div>
+
               <div className="bg-gradient-to-r from-rose-500 to-purple-500 rounded-2xl p-8 text-white mb-6">
-                <h2 className="text-xl font-medium mb-3">Your Primary Bottleneck</h2>
-                <p>{analysis.bottleneck}</p>
+                <div className="flex items-start gap-2 mb-2">
+                  <h2 className="text-xl font-medium flex-1">Your Primary Bottleneck</h2>
+                  <span className="text-xs opacity-80">This highlights the main area your embryos may need support right now.</span>
+                </div>
+                <p className="mb-3">{analysis.bottleneck}</p>
+                <p className="text-sm opacity-90 italic">This isn't about blame. It's about clarity — so you know where to focus.</p>
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-                <h2 className="text-xl font-medium mb-4">Top 3 Priorities</h2>
+                <h2 className="text-xl font-medium mb-2">Top 3 Priorities</h2>
+                <p className="text-sm text-gray-600 mb-4 italic">If everything feels overwhelming, start here. You don't need to do everything — just these.</p>
                 {analysis.priorities.map((p, i) => (
                   <div key={i} className="flex gap-3 p-4 bg-rose-50 rounded-lg mb-3">
-                    <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center font-medium">{i + 1}</div>
-                    <p className="text-gray-700 pt-1">{p}</p>
+                    <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center font-medium flex-shrink-0">{i + 1}</div>
+                    <div className="flex-1">
+                      <p className="text-gray-700">{p}</p>
+                      <p className="text-xs text-gray-500 mt-1 italic">Small, consistent steps matter more than perfection.</p>
+                    </div>
                   </div>
                 ))}
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-                <h2 className="text-xl font-medium mb-6">Personalized Supplements</h2>
+                <h2 className="text-xl font-medium mb-2">Personalized Supplements</h2>
+                <p className="text-xs text-gray-600 mb-4 italic">Supplements are supportive, not magic. Always follow guidance from your medical team.</p>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-medium mb-4 pb-2 border-b">For Him</h3>
@@ -614,12 +682,16 @@ const IVFJourneyTool = () => {
                     ))}
                   </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-4 italic">If this feels like too much, focus on consistency over complexity.</p>
               </div>
 
               <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-                <h2 className="text-xl font-medium mb-4">Your Focus Plan</h2>
-                <p className="text-sm text-gray-600 mb-6">Click each item for detailed guidance</p>
+                <h2 className="text-xl font-medium mb-2">Your Focus Plan</h2>
+                <p className="text-sm text-gray-600 mb-6 italic">Click into any area below for gentle guidance. You don't need to tackle everything at once.</p>
                 <div className="space-y-4">
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-500 italic mb-3">This is about nourishment, not restriction.</p>
+                  </div>
                   <FocusSection 
                     title="Nutrition" 
                     color="rose"
@@ -631,6 +703,9 @@ const IVFJourneyTool = () => {
                     ]}
                   />
                   
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-500 italic mb-3">Support your body — not punish it.</p>
+                  </div>
                   <FocusSection 
                     title="Lifestyle" 
                     color="purple"
@@ -642,6 +717,9 @@ const IVFJourneyTool = () => {
                     ]}
                   />
                   
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-500 italic mb-3">Stress doesn't cause infertility — but calming your nervous system supports healing.</p>
+                  </div>
                   <FocusSection 
                     title="Stress Management" 
                     color="blue"
@@ -655,6 +733,7 @@ const IVFJourneyTool = () => {
                 </div>
               </div>
 
+              <SupportiveFooter />
               <MedicalDisclaimer />
             </>
           )}
@@ -663,7 +742,7 @@ const IVFJourneyTool = () => {
             <>
               <div className="bg-white rounded-2xl shadow-sm border p-8">
                 <h2 className="text-2xl font-light mb-2">Today's Check-in</h2>
-                <p className="text-gray-600 text-sm mb-6">Building consistency, one day at a time</p>
+                <p className="text-gray-600 text-sm mb-6 italic">Building consistency, one gentle day at a time.</p>
                 
                 <div className="space-y-4">
                   <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
@@ -676,6 +755,7 @@ const IVFJourneyTool = () => {
                     <div>
                       <p className="font-medium text-gray-800">Took my supplements</p>
                       <p className="text-xs text-gray-600">Building egg and sperm quality takes consistency</p>
+                      <p className="text-xs text-gray-500 italic mt-1">Even showing up imperfectly still counts.</p>
                     </div>
                   </label>
 
@@ -689,6 +769,7 @@ const IVFJourneyTool = () => {
                     <div>
                       <p className="font-medium text-gray-800">Practiced mindfulness or meditation</p>
                       <p className="text-xs text-gray-600">Even 5 minutes counts</p>
+                      <p className="text-xs text-gray-500 italic mt-1">Five minutes is enough. You're allowed to keep this simple.</p>
                     </div>
                   </label>
 
@@ -702,12 +783,14 @@ const IVFJourneyTool = () => {
                     <div>
                       <p className="font-medium text-gray-800">Moved my body (30min)</p>
                       <p className="text-xs text-gray-600">Walking, yoga, swimming - gentle movement</p>
+                      <p className="text-xs text-gray-500 italic mt-1">Gentle movement supports blood flow and emotional release.</p>
                     </div>
                   </label>
                 </div>
 
                 <div className="mt-6 p-6 bg-gradient-to-r from-purple-50 to-rose-50 rounded-xl">
-                  <h3 className="font-medium text-gray-800 mb-3">Your commitment over time adds up</h3>
+                  <h3 className="font-medium text-gray-800 mb-1">Your commitment over time adds up</h3>
+                  <p className="text-xs text-gray-500 italic mb-3">— even on hard days.</p>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-white rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold text-rose-500">{data.progressTracking.supplementDays}</p>
@@ -725,6 +808,7 @@ const IVFJourneyTool = () => {
                 </div>
               </div>
 
+              <SupportiveFooter />
               <MedicalDisclaimer />
             </>
           )}
@@ -733,9 +817,9 @@ const IVFJourneyTool = () => {
             <>
               <div className="bg-white rounded-2xl shadow-sm border p-8">
                 <h2 className="text-2xl font-light text-gray-800 mb-2">Your Progress</h2>
-                <p className="text-gray-600 text-sm mb-6">Every small action is an investment in your future</p>
+                <p className="text-gray-600 text-sm mb-6 italic">Every small action is an investment in your future.</p>
                 
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-3 gap-4 mb-6">
                   <div className="p-6 bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl">
                     <div className="flex items-center gap-3 mb-2">
                       <Award className="w-6 h-6 text-rose-600" />
@@ -743,6 +827,7 @@ const IVFJourneyTool = () => {
                     </div>
                     <p className="text-3xl font-bold text-rose-600">{data.progressTracking.supplementDays} days</p>
                     <p className="text-xs text-gray-600 mt-2">Keep going! Peak benefit at 90+ days</p>
+                    <p className="text-xs text-gray-500 italic mt-1">Consistency matters more than intensity.</p>
                   </div>
 
                   <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
@@ -752,6 +837,7 @@ const IVFJourneyTool = () => {
                     </div>
                     <p className="text-3xl font-bold text-purple-600">{data.progressTracking.meditationDays}</p>
                     <p className="text-xs text-gray-600 mt-2">You are prioritizing your wellbeing</p>
+                    <p className="text-xs text-gray-500 italic mt-1">Caring for yourself is part of the process — not a distraction from it.</p>
                   </div>
 
                   <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
@@ -761,10 +847,16 @@ const IVFJourneyTool = () => {
                     </div>
                     <p className="text-3xl font-bold text-blue-600">{data.progressTracking.exerciseDays}</p>
                     <p className="text-xs text-gray-600 mt-2">Movement supports blood flow and mood</p>
+                    <p className="text-xs text-gray-500 italic mt-1">Movement supports both your body and your mind.</p>
                   </div>
+                </div>
+
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-600 italic">Progress isn't linear. You're still moving forward.</p>
                 </div>
               </div>
 
+              <SupportiveFooter />
               <MedicalDisclaimer />
             </>
           )}
@@ -772,10 +864,11 @@ const IVFJourneyTool = () => {
           {activeTab === 'answers' && (
             <>
               <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light mb-6">Quick Answers</h2>
+                <h2 className="text-2xl font-light mb-2">Quick Answers</h2>
+                <p className="text-sm text-gray-600 mb-6 italic">These are common questions many women ask during IVF. If you've wondered it — you're not alone.</p>
                 <div className="relative mb-6">
                   <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input type="text" value={questionSearch} onChange={(e) => setQuestionSearch(e.target.value)} placeholder="Search questions" className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
+                  <input type="text" value={questionSearch} onChange={(e) => setQuestionSearch(e.target.value)} placeholder="Type a question you've been holding in your head…" className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
                 </div>
                 <div className="space-y-3">
                   {faqs.filter(faq => questionSearch === '' || faq.q.toLowerCase().includes(questionSearch.toLowerCase())).map((faq, i) => (
@@ -786,12 +879,14 @@ const IVFJourneyTool = () => {
                       </summary>
                       <div className="p-4 bg-gray-50 border-t">
                         <p className="text-sm text-gray-700">{faq.a}</p>
+                        <p className="text-xs text-gray-500 italic mt-2">This is educational support, not medical advice. Always check with your care team.</p>
                       </div>
                     </details>
                   ))}
                 </div>
               </div>
 
+              <SupportiveFooter />
               <MedicalDisclaimer />
             </>
           )}
@@ -799,15 +894,18 @@ const IVFJourneyTool = () => {
           {activeTab === 'journal' && (
             <>
               <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light mb-6">Your Journal</h2>
-                <p className="text-sm text-gray-600 mb-4">A safe space to process your thoughts and feelings</p>
-                <textarea value={journalText} onChange={(e) => setJournalText(e.target.value)} placeholder="How are you feeling today?" rows="6" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none mb-4" />
+                <h2 className="text-2xl font-light mb-2">Your Journal</h2>
+                <p className="text-sm text-gray-600 mb-4 italic">This space is just for you. No judgement. No fixing. Just honesty.</p>
+                <textarea value={journalText} onChange={(e) => setJournalText(e.target.value)} placeholder="What's been weighing on you lately?" rows="6" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none mb-4" />
                 <button onClick={() => {
                   if (journalText.trim()) {
                     setData({...data, journalEntries: [{date: new Date().toLocaleDateString(), text: journalText}, ...data.journalEntries]});
                     setJournalText('');
                   }
                 }} className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg">Save Entry</button>
+                {journalText && (
+                  <p className="text-xs text-gray-500 italic mt-2">Your thoughts are safe here.</p>
+                )}
                 <div className="mt-6 space-y-4">
                   <h3 className="font-medium text-gray-800">Previous Entries</h3>
                   {data.journalEntries.length === 0 ? (
@@ -823,6 +921,7 @@ const IVFJourneyTool = () => {
                 </div>
               </div>
 
+              <SupportiveFooter />
               <MedicalDisclaimer />
             </>
           )}
@@ -831,11 +930,12 @@ const IVFJourneyTool = () => {
             <>
               <div className="bg-white rounded-2xl shadow-sm border p-8">
                 <h2 className="text-2xl font-light text-gray-800 mb-2">You Are Not Alone</h2>
-                <p className="text-gray-600 text-sm mb-6">Based on our community data (all anonymous)</p>
+                <p className="text-gray-600 text-sm mb-6 italic">You're not alone — even when IVF feels isolating.</p>
                 
                 <div className="space-y-6">
                   <div className="p-6 bg-rose-50 rounded-xl border border-rose-200">
-                    <h3 className="font-medium text-gray-800 mb-3">Women with your pattern</h3>
+                    <h3 className="font-medium text-gray-800 mb-1">Women with your pattern</h3>
+                    <p className="text-xs text-gray-500 mb-3 italic">These numbers reflect shared experiences from women on similar paths.</p>
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <Users className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
@@ -881,7 +981,8 @@ const IVFJourneyTool = () => {
                   </div>
 
                   <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
-                    <h3 className="font-medium text-gray-800 mb-3">Real Stories (Anonymous)</h3>
+                    <h3 className="font-medium text-gray-800 mb-1">Real Stories (Anonymous)</h3>
+                    <p className="text-xs text-gray-500 mb-3 italic">This space is for support and reassurance, not comparison.</p>
                     <div className="space-y-4">
                       <div className="p-4 bg-white rounded-lg">
                         <p className="text-sm text-gray-700 italic mb-2">"After 2 failed cycles with poor fertilization, I did the 90-day protocol. Next cycle: 8 fertilized instead of 3, and 4 made it to blast. Currently 12 weeks pregnant."</p>
@@ -897,9 +998,82 @@ const IVFJourneyTool = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* SHARE YOUR STORY SECTION */}
+                  <div className="p-6 bg-gradient-to-r from-rose-50 to-purple-50 rounded-xl border-2 border-rose-200">
+                    <h3 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
+                      <Heart className="w-5 h-5 text-rose-500" />
+                      Share Your Story
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">Help other women on this journey by sharing your experience (completely optional and anonymous)</p>
+                    
+                    {storySubmitted ? (
+                      <div className="bg-white rounded-lg p-6 text-center">
+                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                        <p className="text-gray-700 font-medium">Thank you for sharing your story!</p>
+                        <p className="text-sm text-gray-600 mt-2">Your experience will help support other women on their journey.</p>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleStorySubmit} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Did you do another IVF cycle after using this tool?</label>
+                          <div className="space-y-2">
+                            {['Yes', 'No', 'Not yet'].map(opt => (
+                              <label key={opt} className="flex items-center gap-2 p-3 bg-white rounded-lg cursor-pointer hover:bg-gray-50 border">
+                                <input type="radio" name="hadCycle" value={opt} checked={storyForm.hadAnotherCycle === opt} onChange={(e) => setStoryForm({...storyForm, hadAnotherCycle: e.target.value})} className="text-rose-500" />
+                                <span className="text-sm">{opt}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {storyForm.hadAnotherCycle === 'Yes' && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">What were your results?</label>
+                            <div className="space-y-2">
+                              {['Improved', 'Similar', 'N/A'].map(opt => (
+                                <label key={opt} className="flex items-center gap-2 p-3 bg-white rounded-lg cursor-pointer hover:bg-gray-50 border">
+                                  <input type="radio" name="outcome" value={opt} checked={storyForm.outcome === opt} onChange={(e) => setStoryForm({...storyForm, outcome: e.target.value})} className="text-rose-500" />
+                                  <span className="text-sm">{opt}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Share your experience (optional)</label>
+                          <textarea value={storyForm.testimonial} onChange={(e) => setStoryForm({...storyForm, testimonial: e.target.value})} placeholder="What helped you most? What would you want other women to know?" rows="4" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none text-sm" />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Age</label>
+                            <input type="number" value={storyForm.age} onChange={(e) => setStoryForm({...storyForm, age: e.target.value})} placeholder="36" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Diagnosis</label>
+                            <input type="text" value={storyForm.diagnosis} onChange={(e) => setStoryForm({...storyForm, diagnosis: e.target.value})} placeholder="PCOS" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none text-sm" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Cycles</label>
+                            <input type="number" value={storyForm.cycleCount} onChange={(e) => setStoryForm({...storyForm, cycleCount: e.target.value})} placeholder="3" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none text-sm" />
+                          </div>
+                        </div>
+
+                        <button type="submit" disabled={!storyForm.hadAnotherCycle} className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors">
+                          <Send className="w-4 h-4" />
+                          Submit Story
+                        </button>
+
+                        <p className="text-xs text-gray-500 text-center italic">All submissions are anonymous. Your email will not be shared publicly.</p>
+                      </form>
+                    )}
+                  </div>
                 </div>
               </div>
 
+              <SupportiveFooter />
               <MedicalDisclaimer />
             </>
           )}
