@@ -109,6 +109,10 @@ const IVFJourneyTool = () => {
     cycleCount: ''
   });
   const [storySubmitted, setStorySubmitted] = useState(false);
+  
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiConversation, setAiConversation] = useState([]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   // MASTER ACCESS CODE - This is your admin code to access the tool
   const MASTER_ACCESS_CODE = 'embryo2025';
@@ -193,7 +197,7 @@ const IVFJourneyTool = () => {
   };
 
   const handleLogout = () => {
-   if (window.confirm('We will be right here when you come back. Are you sure you want to log out?')) {
+    if (window.confirm('We will be right here when you come back. Are you sure you want to log out?')) {
       setIsAuthenticated(false);
       setUserEmail('');
       setStep('welcome');
@@ -224,6 +228,67 @@ const IVFJourneyTool = () => {
         cycleCount: ''
       });
     }, 3000);
+  };
+
+  const handleAiQuestion = async (e) => {
+    e.preventDefault();
+    if (!aiQuestion.trim()) return;
+
+    const userMessage = aiQuestion.trim();
+    setAiQuestion('');
+    setIsAiLoading(true);
+
+    setAiConversation(prev => [...prev, { role: 'user', content: userMessage }]);
+
+    try {
+      const userContext = `You are a supportive, knowledgeable fertility coach helping someone through IVF. 
+
+User's Profile:
+- Age: ${data.age || 'not specified'}
+- IVF Cycles Completed: ${data.cycles || 'not specified'}
+- Current Stage: ${data.stage === 'preparing' ? 'preparing for IVF' : data.stage === 'between' ? 'between cycles' : data.stage === 'transfer' ? 'preparing for transfer' : 'not specified'}
+- Embryo Pattern: ${data.embryoOutcome === 'notYet' ? 'first cycle, not yet started' : data.embryoOutcome === 'poorFertilisation' ? 'poor fertilization rates' : data.embryoOutcome === 'earlyArrest' ? 'embryos arresting early' : data.embryoOutcome === 'fewBlast' ? 'few embryos reaching blastocyst' : data.embryoOutcome === 'failedImplantation' ? 'failed implantation' : 'not specified'}
+- Known Factors: ${data.knownFactors.length > 0 ? data.knownFactors.join(', ') : 'none specified'}
+- Pregnancy History: ${Object.keys(data.pregnancies).filter(k => data.pregnancies[k] && k !== 'none').join(', ') || 'none'}
+
+Guidelines for your responses:
+1. Be warm, encouraging, and scientifically accurate
+2. Reference their specific situation when relevant
+3. Keep responses concise - 2-3 paragraphs maximum
+4. Be actionable and practical
+5. Always remind them to consult their healthcare provider for medical decisions
+6. Use a gentle, supportive tone
+7. Avoid overwhelming them with information
+
+Now answer their question:`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [
+            { role: "user", content: userContext + "\n\n" + userMessage }
+          ],
+        })
+      });
+
+      const result = await response.json();
+      const aiResponse = result.content?.[0]?.text || "I'm sorry, I could not generate a response. Please try again.";
+
+      setAiConversation(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+    } catch (error) {
+      console.error('AI Error:', error);
+      setAiConversation(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I'm having trouble connecting right now. Please try again in a moment." 
+      }]);
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   // Show login screen if not authenticated
@@ -281,7 +346,7 @@ const IVFJourneyTool = () => {
                 Your data is saved to your browser and tied to your email. Use the same email each time to access your saved progress.
               </p>
               <p className="text-xs text-gray-500 text-center">
-                Don't have an access code? This tool is available with the Embryo Success Plan.
+                Don't have an access code? This tool is available with the Embryo Quality course.
               </p>
             </div>
           </div>
@@ -864,29 +929,98 @@ const IVFJourneyTool = () => {
           {activeTab === 'answers' && (
             <>
               <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light mb-2">Quick Answers</h2>
-                <p className="text-sm text-gray-600 mb-6 italic">These are common questions many women ask during IVF. If you've wondered it — you're not alone.</p>
-                <div className="relative mb-6">
-                  <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input type="text" value={questionSearch} onChange={(e) => setQuestionSearch(e.target.value)} placeholder="Type a question you've been holding in your head…" className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
+                <div className="mb-6">
+                  <h2 className="text-2xl font-light mb-2">Ask Your Fertility Coach</h2>
+                  <p className="text-sm text-gray-600 italic">
+                    Get personalized answers based on your situation. Available 24/7 when your clinic is not.
+                  </p>
                 </div>
-                <div className="space-y-3">
-                  {faqs.filter(faq => questionSearch === '' || faq.q.toLowerCase().includes(questionSearch.toLowerCase())).map((faq, i) => (
-                    <details key={i} className="group border rounded-lg">
-                      <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
-                        <span className="font-medium text-gray-800">{faq.q}</span>
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
-                      </summary>
-                      <div className="p-4 bg-gray-50 border-t">
-                        <p className="text-sm text-gray-700">{faq.a}</p>
-                        <p className="text-xs text-gray-500 italic mt-2">This is educational support, not medical advice. Always check with your care team.</p>
+
+                <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                  {aiConversation.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 mb-4">No questions yet. What would you like to know?</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                        <button
+                          onClick={() => setAiQuestion("Should I continue taking CoQ10 during my stims?")}
+                          className="p-3 bg-rose-50 rounded-lg text-left text-sm text-gray-700 hover:bg-rose-100 transition-colors"
+                        >
+                          Should I continue taking CoQ10 during my stims?
+                        </button>
+                        <button
+                          onClick={() => setAiQuestion("What foods should I focus on right now?")}
+                          className="p-3 bg-purple-50 rounded-lg text-left text-sm text-gray-700 hover:bg-purple-100 transition-colors"
+                        >
+                          What foods should I focus on right now?
+                        </button>
+                        <button
+                          onClick={() => setAiQuestion("Can I exercise during the two week wait?")}
+                          className="p-3 bg-blue-50 rounded-lg text-left text-sm text-gray-700 hover:bg-blue-100 transition-colors"
+                        >
+                          Can I exercise during the two week wait?
+                        </button>
+                        <button
+                          onClick={() => setAiQuestion("How do I talk to my partner about getting on supplements?")}
+                          className="p-3 bg-rose-50 rounded-lg text-left text-sm text-gray-700 hover:bg-rose-100 transition-colors"
+                        >
+                          How do I talk to my partner about getting on supplements?
+                        </button>
                       </div>
-                    </details>
-                  ))}
+                    </div>
+                  ) : (
+                    aiConversation.map((msg, idx) => (
+                      <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-2xl ${msg.role === 'user' ? 'bg-rose-100 text-gray-800' : 'bg-gray-100 text-gray-800'} rounded-2xl p-4`}>
+                          {msg.role === 'assistant' && (
+                            <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                              <Heart className="w-3 h-3 text-rose-500" /> Your Fertility Coach
+                            </p>
+                          )}
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                          {msg.role === 'assistant' && (
+                            <p className="text-xs text-gray-500 italic mt-3 pt-3 border-t border-gray-200">
+                              This is educational support. Always consult your healthcare provider for medical decisions.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  
+                  {isAiLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-2xl p-4 max-w-2xl">
+                        <p className="text-sm text-gray-600 flex items-center gap-2">
+                          <div className="animate-pulse">Thinking...</div>
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                <form onSubmit={handleAiQuestion} className="relative">
+                  <input
+                    type="text"
+                    value={aiQuestion}
+                    onChange={(e) => setAiQuestion(e.target.value)}
+                    placeholder="Ask anything about IVF, supplements, timing, lifestyle..."
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
+                    disabled={isAiLoading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!aiQuestion.trim() || isAiLoading}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-rose-500 hover:bg-rose-600 disabled:bg-gray-300 text-white p-2 rounded-lg transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+
+                <p className="text-xs text-gray-500 text-center mt-4 italic">
+                  Your questions and answers are saved in your browser for this session.
+                </p>
               </div>
 
-              <SupportiveFooter />
               <MedicalDisclaimer />
             </>
           )}
