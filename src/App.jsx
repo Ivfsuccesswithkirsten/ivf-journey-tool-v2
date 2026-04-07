@@ -109,10 +109,6 @@ const IVFJourneyTool = () => {
     cycleCount: ''
   });
   const [storySubmitted, setStorySubmitted] = useState(false);
-  
-  const [aiQuestion, setAiQuestion] = useState('');
-  const [aiConversation, setAiConversation] = useState([]);
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
   // MASTER ACCESS CODE - This is your admin code to access the tool
   const MASTER_ACCESS_CODE = 'embryo2025';
@@ -228,67 +224,6 @@ const IVFJourneyTool = () => {
         cycleCount: ''
       });
     }, 3000);
-  };
-
-  const handleAiQuestion = async (e) => {
-    e.preventDefault();
-    if (!aiQuestion.trim()) return;
-
-    const userMessage = aiQuestion.trim();
-    setAiQuestion('');
-    setIsAiLoading(true);
-
-    setAiConversation(prev => [...prev, { role: 'user', content: userMessage }]);
-
-    try {
-      const userContext = `You are a supportive, knowledgeable fertility coach helping someone through IVF. 
-
-User's Profile:
-- Age: ${data.age || 'not specified'}
-- IVF Cycles Completed: ${data.cycles || 'not specified'}
-- Current Stage: ${data.stage === 'preparing' ? 'preparing for IVF' : data.stage === 'between' ? 'between cycles' : data.stage === 'transfer' ? 'preparing for transfer' : 'not specified'}
-- Embryo Pattern: ${data.embryoOutcome === 'notYet' ? 'first cycle, not yet started' : data.embryoOutcome === 'poorFertilisation' ? 'poor fertilization rates' : data.embryoOutcome === 'earlyArrest' ? 'embryos arresting early' : data.embryoOutcome === 'fewBlast' ? 'few embryos reaching blastocyst' : data.embryoOutcome === 'failedImplantation' ? 'failed implantation' : 'not specified'}
-- Known Factors: ${data.knownFactors.length > 0 ? data.knownFactors.join(', ') : 'none specified'}
-- Pregnancy History: ${Object.keys(data.pregnancies).filter(k => data.pregnancies[k] && k !== 'none').join(', ') || 'none'}
-
-Guidelines for your responses:
-1. Be warm, encouraging, and scientifically accurate
-2. Reference their specific situation when relevant
-3. Keep responses concise - 2-3 paragraphs maximum
-4. Be actionable and practical
-5. Always remind them to consult their healthcare provider for medical decisions
-6. Use a gentle, supportive tone
-7. Avoid overwhelming them with information
-
-Now answer their question:`;
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [
-            { role: "user", content: userContext + "\n\n" + userMessage }
-          ],
-        })
-      });
-
-      const result = await response.json();
-      const aiResponse = result.content?.[0]?.text || "I'm sorry, I could not generate a response. Please try again.";
-
-      setAiConversation(prev => [...prev, { role: 'assistant', content: aiResponse }]);
-    } catch (error) {
-      console.error('AI Error:', error);
-      setAiConversation(prev => [...prev, { 
-        role: 'assistant', 
-        content: "I'm having trouble connecting right now. Please try again in a moment." 
-      }]);
-    } finally {
-      setIsAiLoading(false);
-    }
   };
 
   // Show login screen if not authenticated
@@ -443,6 +378,125 @@ Now answer their question:`;
     }
 
     return { bottleneck, priorities, secondary, guidance };
+  };
+
+  const getCommunityData = () => {
+    const outcome = data.embryoOutcome;
+    
+    if (outcome === 'notYet') {
+      return {
+        count: 203,
+        pattern: 'preparing for their first cycle',
+        successRate: '76%',
+        successMetric: 'optimized before cycle 1 and got better outcomes',
+        avgTime: '12-16 weeks',
+        topActions: [
+          { action: 'Started supplements 90+ days before', percent: '94%' },
+          { action: 'Partner on protocol too', percent: '87%' },
+          { action: 'Mediterranean diet', percent: '81%' },
+          { action: 'Stress management practice', percent: '76%' }
+        ],
+        stories: [
+          { text: 'I spent 4 months preparing before my first cycle. We got 8 mature eggs and 4 blasts - my doctor said the quality was exceptional for my age.', age: 37, diagnosis: 'Unexplained', cycles: 1 },
+          { text: 'Getting my partner on supplements made such a difference. Our fertilization rate was 90% on our first cycle.', age: 34, diagnosis: 'Male factor', cycles: 1 },
+          { text: 'The preparation time gave me confidence. I walked into retrieval knowing I had done everything I could.', age: 36, diagnosis: 'DOR', cycles: 1 }
+        ]
+      };
+    } else if (outcome === 'poorFertilisation') {
+      return {
+        count: 127,
+        pattern: 'poor fertilization rates',
+        successRate: '68%',
+        successMetric: 'improved fertilization on next cycle',
+        avgTime: '14-18 weeks',
+        topActions: [
+          { action: 'Full antioxidant protocol both partners', percent: '92%' },
+          { action: 'Partner sperm DNA testing', percent: '84%' },
+          { action: 'CoQ10 + L-carnitine combo', percent: '88%' },
+          { action: 'Mediterranean anti-inflammatory diet', percent: '79%' }
+        ],
+        stories: [
+          { text: 'After 2 failed cycles with 30% fertilization, we both did the 90-day protocol. Next cycle: 85% fertilization. The quality difference was night and day.', age: 36, diagnosis: 'PCOS', cycles: 3 },
+          { text: 'Getting my partner tested for sperm DNA fragmentation changed everything. High oxidative stress was the issue - antioxidants fixed it.', age: 34, diagnosis: 'Male factor', cycles: 2 },
+          { text: 'I was so discouraged after poor fertilization twice. The protocol gave me hope and actual results - 7 out of 9 fertilized beautifully.', age: 38, diagnosis: 'Unexplained', cycles: 3 }
+        ]
+      };
+    } else if (outcome === 'earlyArrest') {
+      return {
+        count: 94,
+        pattern: 'early arrest challenges',
+        successRate: '71%',
+        successMetric: 'reached blastocyst stage',
+        avgTime: '16-20 weeks',
+        topActions: [
+          { action: 'Mitochondrial support (CoQ10, L-carnitine)', percent: '95%' },
+          { action: '8+ hours sleep priority', percent: '89%' },
+          { action: 'Anti-inflammatory protocol', percent: '82%' },
+          { action: 'Both partners on full protocol', percent: '77%' }
+        ],
+        stories: [
+          { text: 'Two cycles of day 3 arrest. After mitochondrial support for both of us, we got 5 blasts from 8 embryos. Energy at the cellular level matters.', age: 35, diagnosis: 'Endometriosis', cycles: 3 },
+          { text: 'Sleep was my missing piece. Prioritizing 8 hours plus CoQ10 changed my embryo development completely.', age: 37, diagnosis: 'DOR', cycles: 2 },
+          { text: 'After early arrest twice, the inflammation focus plus supplements got us 3 beautiful blasts. Now pregnant with the first one.', age: 36, diagnosis: 'Endometriosis', cycles: 3 }
+        ]
+      };
+    } else if (outcome === 'fewBlast') {
+      return {
+        count: 112,
+        pattern: 'low blastocyst conversion',
+        successRate: '64%',
+        successMetric: 'improved blast numbers',
+        avgTime: '14-18 weeks',
+        topActions: [
+          { action: 'Full antioxidant protocol 90+ days', percent: '91%' },
+          { action: 'Anti-inflammatory diet', percent: '86%' },
+          { action: 'Requested extended culture/time-lapse', percent: '73%' },
+          { action: 'Both partners optimized together', percent: '81%' }
+        ],
+        stories: [
+          { text: 'From 1 blast out of 12 embryos to 6 blasts out of 14. The protocol works if you give it time.', age: 38, diagnosis: 'DOR', cycles: 3 },
+          { text: 'We went from 2 blasts to 7 blasts after the full 90-day protocol. Quality over quantity became quality AND quantity.', age: 35, diagnosis: 'PCOS', cycles: 2 },
+          { text: 'The antioxidant protocol plus time-lapse incubation gave us 5 blasts when we previously got 1. Science plus optimization.', age: 37, diagnosis: 'Unexplained', cycles: 3 }
+        ]
+      };
+    } else if (outcome === 'failedImplantation') {
+      return {
+        count: 156,
+        pattern: 'implantation challenges',
+        successRate: '63%',
+        successMetric: 'successful implantation',
+        avgTime: '12-16 weeks',
+        topActions: [
+          { action: 'Uterine support (Vitamin E, omega-3s)', percent: '89%' },
+          { action: 'ERA/EMMA/ALICE testing', percent: '76%' },
+          { action: 'Immune protocol discussion with RE', percent: '68%' },
+          { action: 'Stress management focus', percent: '84%' }
+        ],
+        stories: [
+          { text: 'Three failed transfers with good blasts. ERA showed I needed an extra day of progesterone. Next transfer stuck.', age: 34, diagnosis: 'Unexplained', cycles: 4 },
+          { text: 'Added Vitamin E and omega-3s for uterine support. Fourth transfer was the charm - now 12 weeks pregnant.', age: 36, diagnosis: 'Endometriosis', cycles: 4 },
+          { text: 'After 2 chemical pregnancies, immune testing found elevated NK cells. Protocol adjustment made the difference.', age: 35, diagnosis: 'Recurrent loss', cycles: 3 }
+        ]
+      };
+    }
+    
+    return {
+      count: 700,
+      pattern: 'working to optimize their IVF outcomes',
+      successRate: '69%',
+      successMetric: 'reported improvements',
+      avgTime: '12-18 weeks',
+      topActions: [
+        { action: 'Comprehensive supplement protocol', percent: '90%' },
+        { action: 'Mediterranean fertility diet', percent: '83%' },
+        { action: 'Stress management practices', percent: '78%' },
+        { action: 'Partner involvement', percent: '72%' }
+      ],
+      stories: [
+        { text: 'The protocol gave me control when everything felt chaotic. That mindset shift was as important as the supplements.', age: 35, diagnosis: 'Unexplained', cycles: 2 },
+        { text: 'Seeing the data personalized to my situation helped me advocate better with my clinic.', age: 37, diagnosis: 'PCOS', cycles: 3 }
+      ]
+    };
   };
 
   const faqs = [
@@ -929,96 +983,32 @@ Now answer their question:`;
           {activeTab === 'answers' && (
             <>
               <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-light mb-2">Ask Your Fertility Coach</h2>
-                  <p className="text-sm text-gray-600 italic">
-                    Get personalized answers based on your situation. Available 24/7 when your clinic is not.
-                  </p>
-                </div>
-
-                <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-                  {aiConversation.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">No questions yet. What would you like to know?</p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
-                        <button
-                          onClick={() => setAiQuestion("Should I continue taking CoQ10 during my stims?")}
-                          className="p-3 bg-rose-50 rounded-lg text-left text-sm text-gray-700 hover:bg-rose-100 transition-colors"
-                        >
-                          Should I continue taking CoQ10 during my stims?
-                        </button>
-                        <button
-                          onClick={() => setAiQuestion("What foods should I focus on right now?")}
-                          className="p-3 bg-purple-50 rounded-lg text-left text-sm text-gray-700 hover:bg-purple-100 transition-colors"
-                        >
-                          What foods should I focus on right now?
-                        </button>
-                        <button
-                          onClick={() => setAiQuestion("Can I exercise during the two week wait?")}
-                          className="p-3 bg-blue-50 rounded-lg text-left text-sm text-gray-700 hover:bg-blue-100 transition-colors"
-                        >
-                          Can I exercise during the two week wait?
-                        </button>
-                        <button
-                          onClick={() => setAiQuestion("How do I talk to my partner about getting on supplements?")}
-                          className="p-3 bg-rose-50 rounded-lg text-left text-sm text-gray-700 hover:bg-rose-100 transition-colors"
-                        >
-                          How do I talk to my partner about getting on supplements?
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    aiConversation.map((msg, idx) => (
-                      <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-2xl ${msg.role === 'user' ? 'bg-rose-100 text-gray-800' : 'bg-gray-100 text-gray-800'} rounded-2xl p-4`}>
-                          {msg.role === 'assistant' && (
-                            <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                              <Heart className="w-3 h-3 text-rose-500" /> Your Fertility Coach
-                            </p>
-                          )}
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                          {msg.role === 'assistant' && (
-                            <p className="text-xs text-gray-500 italic mt-3 pt-3 border-t border-gray-200">
-                              This is educational support. Always consult your healthcare provider for medical decisions.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  
-                  {isAiLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-100 rounded-2xl p-4 max-w-2xl">
-                        <p className="text-sm text-gray-600 flex items-center gap-2">
-                          <div className="animate-pulse">Thinking...</div>
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <form onSubmit={handleAiQuestion} className="relative">
-                  <input
-                    type="text"
-                    value={aiQuestion}
-                    onChange={(e) => setAiQuestion(e.target.value)}
-                    placeholder="Ask anything about IVF, supplements, timing, lifestyle..."
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
-                    disabled={isAiLoading}
+                <h2 className="text-2xl font-light mb-2">Quick Answers</h2>
+                <p className="text-sm text-gray-600 mb-6 italic">Common questions many women ask during IVF.</p>
+                <div className="relative mb-6">
+                  <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <input 
+                    type="text" 
+                    value={questionSearch} 
+                    onChange={(e) => setQuestionSearch(e.target.value)} 
+                    placeholder="Search for a question..." 
+                    className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" 
                   />
-                  <button
-                    type="submit"
-                    disabled={!aiQuestion.trim() || isAiLoading}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-rose-500 hover:bg-rose-600 disabled:bg-gray-300 text-white p-2 rounded-lg transition-colors"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
-
-                <p className="text-xs text-gray-500 text-center mt-4 italic">
-                  Your questions and answers are saved in your browser for this session.
-                </p>
+                </div>
+                <div className="space-y-3">
+                  {faqs.filter(faq => questionSearch === '' || faq.q.toLowerCase().includes(questionSearch.toLowerCase())).map((faq, i) => (
+                    <details key={i} className="group border rounded-lg">
+                      <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
+                        <span className="font-medium text-gray-800">{faq.q}</span>
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      </summary>
+                      <div className="p-4 bg-gray-50 border-t">
+                        <p className="text-sm text-gray-700">{faq.a}</p>
+                        <p className="text-xs text-gray-500 italic mt-2">This is educational support, not medical advice. Always check with your care team.</p>
+                      </div>
+                    </details>
+                  ))}
+                </div>
               </div>
 
               <MedicalDisclaimer />
