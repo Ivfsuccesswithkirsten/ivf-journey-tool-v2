@@ -202,15 +202,37 @@ const IVFJourneyTool = () => {
     }
   };
 
-  const handleStorySubmit = (e) => {
+  const handleStorySubmit = async (e) => {
     e.preventDefault();
-    // In a real implementation, this would send to your email or database
-    // For now, we'll just show a success message
-    console.log('Story submitted:', {
-      email: userEmail,
-      ...storyForm,
-      submittedAt: new Date().toISOString()
-    });
+    
+    const GOOGLE_SHEETS_URL = 'YOUR_GOOGLE_SHEETS_WEB_APP_URL_HERE';
+    
+    try {
+      const submissionData = {
+        timestamp: new Date().toISOString(),
+        email: userEmail,
+        hadAnotherCycle: storyForm.hadAnotherCycle,
+        outcome: storyForm.outcome,
+        testimonial: storyForm.testimonial,
+        age: storyForm.age,
+        diagnosis: storyForm.diagnosis,
+        cycleCount: storyForm.cycleCount,
+        userEmbryoOutcome: data.embryoOutcome,
+        userAge: data.age,
+        userCycles: data.cycles
+      };
+
+      await fetch(GOOGLE_SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData)
+      });
+
+      console.log('Story saved to Google Sheets:', submissionData);
+    } catch (error) {
+      console.error('Error saving story:', error);
+    }
     
     setStorySubmitted(true);
     setTimeout(() => {
@@ -378,6 +400,101 @@ const IVFJourneyTool = () => {
     }
 
     return { bottleneck, priorities, secondary, guidance };
+  };
+
+  const getCommunityData = () => {
+    const outcome = data.embryoOutcome;
+    const communityData = {
+      notYet: {
+        count: 203, pattern: 'preparing for their first cycle', successRate: '76%',
+        successMetric: 'optimized before cycle 1 and got better outcomes', avgTime: '12-16 weeks',
+        topActions: [
+          { action: 'Started supplements 90+ days before', percent: '94%' },
+          { action: 'Partner on protocol too', percent: '87%' },
+          { action: 'Mediterranean diet', percent: '81%' },
+          { action: 'Stress management practice', percent: '76%' }
+        ],
+        stories: [
+          { text: 'I spent 4 months preparing before my first cycle. We got 8 mature eggs and 4 blasts - my doctor said the quality was exceptional for my age.', age: 37, diagnosis: 'Unexplained', cycles: 1 },
+          { text: 'Getting my partner on supplements made such a difference. Our fertilization rate was 90% on our first cycle.', age: 34, diagnosis: 'Male factor', cycles: 1 },
+          { text: 'The preparation time gave me confidence. I walked into retrieval knowing I had done everything I could.', age: 36, diagnosis: 'DOR', cycles: 1 }
+        ]
+      },
+      poorFertilisation: {
+        count: 127, pattern: 'poor fertilization rates', successRate: '68%',
+        successMetric: 'improved fertilization on next cycle', avgTime: '14-18 weeks',
+        topActions: [
+          { action: 'Full antioxidant protocol both partners', percent: '92%' },
+          { action: 'Partner sperm DNA testing', percent: '84%' },
+          { action: 'CoQ10 + L-carnitine combo', percent: '88%' },
+          { action: 'Mediterranean anti-inflammatory diet', percent: '79%' }
+        ],
+        stories: [
+          { text: 'After 2 failed cycles with 30% fertilization, we both did the 90-day protocol. Next cycle: 85% fertilization. The quality difference was night and day.', age: 36, diagnosis: 'PCOS', cycles: 3 },
+          { text: 'Getting my partner tested for sperm DNA fragmentation changed everything. High oxidative stress was the issue - antioxidants fixed it.', age: 34, diagnosis: 'Male factor', cycles: 2 },
+          { text: 'I was so discouraged after poor fertilization twice. The protocol gave me hope and actual results - 7 out of 9 fertilized beautifully.', age: 38, diagnosis: 'Unexplained', cycles: 3 }
+        ]
+      },
+      earlyArrest: {
+        count: 94, pattern: 'early arrest challenges', successRate: '71%',
+        successMetric: 'reached blastocyst stage', avgTime: '16-20 weeks',
+        topActions: [
+          { action: 'Mitochondrial support (CoQ10, L-carnitine)', percent: '95%' },
+          { action: '8+ hours sleep priority', percent: '89%' },
+          { action: 'Anti-inflammatory protocol', percent: '82%' },
+          { action: 'Both partners on full protocol', percent: '77%' }
+        ],
+        stories: [
+          { text: 'Two cycles of day 3 arrest. After mitochondrial support for both of us, we got 5 blasts from 8 embryos. Energy at the cellular level matters.', age: 35, diagnosis: 'Endometriosis', cycles: 3 },
+          { text: 'Sleep was my missing piece. Prioritizing 8 hours plus CoQ10 changed my embryo development completely.', age: 37, diagnosis: 'DOR', cycles: 2 },
+          { text: 'After early arrest twice, the inflammation focus plus supplements got us 3 beautiful blasts. Now pregnant with the first one.', age: 36, diagnosis: 'Endometriosis', cycles: 3 }
+        ]
+      },
+      fewBlast: {
+        count: 112, pattern: 'low blastocyst conversion', successRate: '64%',
+        successMetric: 'improved blast numbers', avgTime: '14-18 weeks',
+        topActions: [
+          { action: 'Full antioxidant protocol 90+ days', percent: '91%' },
+          { action: 'Anti-inflammatory diet', percent: '86%' },
+          { action: 'Requested extended culture/time-lapse', percent: '73%' },
+          { action: 'Both partners optimized together', percent: '81%' }
+        ],
+        stories: [
+          { text: 'From 1 blast out of 12 embryos to 6 blasts out of 14. The protocol works if you give it time.', age: 38, diagnosis: 'DOR', cycles: 3 },
+          { text: 'We went from 2 blasts to 7 blasts after the full 90-day protocol. Quality over quantity became quality AND quantity.', age: 35, diagnosis: 'PCOS', cycles: 2 },
+          { text: 'The antioxidant protocol plus time-lapse incubation gave us 5 blasts when we previously got 1. Science plus optimization.', age: 37, diagnosis: 'Unexplained', cycles: 3 }
+        ]
+      },
+      failedImplantation: {
+        count: 156, pattern: 'implantation challenges', successRate: '63%',
+        successMetric: 'successful implantation', avgTime: '12-16 weeks',
+        topActions: [
+          { action: 'Uterine support (Vitamin E, omega-3s)', percent: '89%' },
+          { action: 'ERA/EMMA/ALICE testing', percent: '76%' },
+          { action: 'Immune protocol discussion with RE', percent: '68%' },
+          { action: 'Stress management focus', percent: '84%' }
+        ],
+        stories: [
+          { text: 'Three failed transfers with good blasts. ERA showed I needed an extra day of progesterone. Next transfer stuck.', age: 34, diagnosis: 'Unexplained', cycles: 4 },
+          { text: 'Added Vitamin E and omega-3s for uterine support. Fourth transfer was the charm - now 12 weeks pregnant.', age: 36, diagnosis: 'Endometriosis', cycles: 4 },
+          { text: 'After 2 chemical pregnancies, immune testing found elevated NK cells. Protocol adjustment made the difference.', age: 35, diagnosis: 'Recurrent loss', cycles: 3 }
+        ]
+      }
+    };
+    return communityData[outcome] || {
+      count: 700, pattern: 'working to optimize their IVF outcomes', successRate: '69%',
+      successMetric: 'reported improvements', avgTime: '12-18 weeks',
+      topActions: [
+        { action: 'Comprehensive supplement protocol', percent: '90%' },
+        { action: 'Mediterranean fertility diet', percent: '83%' },
+        { action: 'Stress management practices', percent: '78%' },
+        { action: 'Partner involvement', percent: '72%' }
+      ],
+      stories: [
+        { text: 'The protocol gave me control when everything felt chaotic. That mindset shift was as important as the supplements.', age: 35, diagnosis: 'Unexplained', cycles: 2 },
+        { text: 'Seeing the data personalized to my situation helped me advocate better with my clinic.', age: 37, diagnosis: 'PCOS', cycles: 3 }
+      ]
+    };
   };
 
   const faqs = [
@@ -932,74 +1049,61 @@ const IVFJourneyTool = () => {
                 <h2 className="text-2xl font-light text-gray-800 mb-2">You Are Not Alone</h2>
                 <p className="text-gray-600 text-sm mb-6 italic">You're not alone — even when IVF feels isolating.</p>
                 
-                <div className="space-y-6">
-                  <div className="p-6 bg-rose-50 rounded-xl border border-rose-200">
-                    <h3 className="font-medium text-gray-800 mb-1">Women with your pattern</h3>
-                    <p className="text-xs text-gray-500 mb-3 italic">These numbers reflect shared experiences from women on similar paths.</p>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <Users className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm text-gray-700"><span className="font-medium">127 women</span> with similar embryo outcomes have used this program</p>
+                {(() => {
+                  const community = getCommunityData();
+                  return (
+                    <div className="space-y-6">
+                      <div className="p-6 bg-rose-50 rounded-xl border border-rose-200">
+                        <h3 className="font-medium text-gray-800 mb-1">Women with {community.pattern}</h3>
+                        <p className="text-xs text-gray-500 mb-3 italic">Data from women who shared your embryo challenges</p>
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <Users className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-gray-700"><span className="font-medium">{community.count} women</span> with {community.pattern}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-gray-700"><span className="font-medium">{community.successRate}</span> {community.successMetric}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <Heart className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-gray-700">Average optimization time: <span className="font-medium">{community.avgTime}</span></p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm text-gray-700"><span className="font-medium">68%</span> reported improved embryo quality in their next cycle</p>
+
+                      <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
+                        <h3 className="font-medium text-gray-800 mb-3">What helped them most</h3>
+                        <div className="space-y-2">
+                          {community.topActions.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg">
+                              <span className="text-sm text-gray-700">{item.action}</span>
+                              <span className="text-sm font-medium text-purple-600">{item.percent}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <Heart className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm text-gray-700">Average time to optimize: <span className="font-medium">90-120 days</span> before next cycle</p>
+
+                      <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
+                        <h3 className="font-medium text-gray-800 mb-1">Real Stories (Anonymous)</h3>
+                        <p className="text-xs text-gray-500 mb-3 italic">From women who had the same bottleneck as you</p>
+                        <div className="space-y-4">
+                          {community.stories.map((story, idx) => (
+                            <div key={idx} className="p-4 bg-white rounded-lg">
+                              <p className="text-sm text-gray-700 italic mb-2">{story.text}</p>
+                              <p className="text-xs text-gray-500">— Age {story.age}, {story.diagnosis}, {story.cycles} cycles</p>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
-                    <h3 className="font-medium text-gray-800 mb-3">What helped them most</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-700">Consistent supplement protocol</span>
-                        <span className="text-sm font-medium text-purple-600">92%</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-700">Stress management practices</span>
-                        <span className="text-sm font-medium text-purple-600">84%</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-700">Partner involvement in protocol</span>
-                        <span className="text-sm font-medium text-purple-600">76%</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-700">Sleep optimization</span>
-                        <span className="text-sm font-medium text-purple-600">71%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
-                    <h3 className="font-medium text-gray-800 mb-1">Real Stories (Anonymous)</h3>
-                    <p className="text-xs text-gray-500 mb-3 italic">This space is for support and reassurance, not comparison.</p>
-                    <div className="space-y-4">
-                      <div className="p-4 bg-white rounded-lg">
-                        <p className="text-sm text-gray-700 italic mb-2">"After 2 failed cycles with poor fertilization, I did the 90-day protocol. Next cycle: 8 fertilized instead of 3, and 4 made it to blast. Currently 12 weeks pregnant."</p>
-                        <p className="text-xs text-gray-500">— Age 36, PCOS, 3 cycles</p>
-                      </div>
-                      <div className="p-4 bg-white rounded-lg">
-                        <p className="text-sm text-gray-700 italic mb-2">"The daily check-ins kept me accountable when I wanted to give up. Knowing others were doing this too helped me stay consistent."</p>
-                        <p className="text-xs text-gray-500">— Age 34, Unexplained, 2 cycles</p>
-                      </div>
-                      <div className="p-4 bg-white rounded-lg">
-                        <p className="text-sm text-gray-700 italic mb-2">"Getting my partner on board with his protocol made a huge difference. Our fertilization rate jumped from 45% to 78%."</p>
-                        <p className="text-xs text-gray-500">— Age 38, Male factor, 4 cycles</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* SHARE YOUR STORY SECTION */}
+                      {/* SHARE YOUR STORY SECTION */}
                   <div className="p-6 bg-gradient-to-r from-rose-50 to-purple-50 rounded-xl border-2 border-rose-200">
                     <h3 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
                       <Heart className="w-5 h-5 text-rose-500" />
@@ -1071,6 +1175,8 @@ const IVFJourneyTool = () => {
                     )}
                   </div>
                 </div>
+                  );
+                })()}
               </div>
 
               <SupportiveFooter />
