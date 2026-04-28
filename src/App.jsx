@@ -98,17 +98,6 @@ const IVFJourneyTool = () => {
   const [journalText, setJournalText] = useState('');
   const [todayCheckin, setTodayCheckin] = useState({ supplements: false, meditation: false, exercise: false });
   const [questionSearch, setQuestionSearch] = useState('');
-  
-  // Share Your Story state
-  const [storyForm, setStoryForm] = useState({
-    hadAnotherCycle: '',
-    outcome: '',
-    testimonial: '',
-    age: '',
-    diagnosis: '',
-    cycleCount: ''
-  });
-  const [storySubmitted, setStorySubmitted] = useState(false);
 
   // MASTER ACCESS CODE - This is your admin code to access the tool
   const MASTER_ACCESS_CODE = 'embryo2025';
@@ -200,52 +189,6 @@ const IVFJourneyTool = () => {
       setSection(1);
       setActiveTab('plan');
     }
-  };
-
-  const handleStorySubmit = async (e) => {
-    e.preventDefault();
-    
-    const GOOGLE_SHEETS_URL = 'YOUR_GOOGLE_SHEETS_WEB_APP_URL_HERE';
-    
-    try {
-      const submissionData = {
-        timestamp: new Date().toISOString(),
-        email: userEmail,
-        hadAnotherCycle: storyForm.hadAnotherCycle,
-        outcome: storyForm.outcome,
-        testimonial: storyForm.testimonial,
-        age: storyForm.age,
-        diagnosis: storyForm.diagnosis,
-        cycleCount: storyForm.cycleCount,
-        userEmbryoOutcome: data.embryoOutcome,
-        userAge: data.age,
-        userCycles: data.cycles
-      };
-
-      await fetch(GOOGLE_SHEETS_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData)
-      });
-
-      console.log('Story saved to Google Sheets:', submissionData);
-    } catch (error) {
-      console.error('Error saving story:', error);
-    }
-    
-    setStorySubmitted(true);
-    setTimeout(() => {
-      setStorySubmitted(false);
-      setStoryForm({
-        hadAnotherCycle: '',
-        outcome: '',
-        testimonial: '',
-        age: '',
-        diagnosis: '',
-        cycleCount: ''
-      });
-    }, 3000);
   };
 
   // Show login screen if not authenticated
@@ -1103,77 +1046,6 @@ const IVFJourneyTool = () => {
                         </div>
                       </div>
 
-                      {/* SHARE YOUR STORY SECTION */}
-                  <div className="p-6 bg-gradient-to-r from-rose-50 to-purple-50 rounded-xl border-2 border-rose-200">
-                    <h3 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
-                      <Heart className="w-5 h-5 text-rose-500" />
-                      Share Your Story
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-4">Help other women on this journey by sharing your experience (completely optional and anonymous)</p>
-                    
-                    {storySubmitted ? (
-                      <div className="bg-white rounded-lg p-6 text-center">
-                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                        <p className="text-gray-700 font-medium">Thank you for sharing your story!</p>
-                        <p className="text-sm text-gray-600 mt-2">Your experience will help support other women on their journey.</p>
-                      </div>
-                    ) : (
-                      <form onSubmit={handleStorySubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Did you do another IVF cycle after using this tool?</label>
-                          <div className="space-y-2">
-                            {['Yes', 'No', 'Not yet'].map(opt => (
-                              <label key={opt} className="flex items-center gap-2 p-3 bg-white rounded-lg cursor-pointer hover:bg-gray-50 border">
-                                <input type="radio" name="hadCycle" value={opt} checked={storyForm.hadAnotherCycle === opt} onChange={(e) => setStoryForm({...storyForm, hadAnotherCycle: e.target.value})} className="text-rose-500" />
-                                <span className="text-sm">{opt}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
-                        {storyForm.hadAnotherCycle === 'Yes' && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">What were your results?</label>
-                            <div className="space-y-2">
-                              {['Improved', 'Similar', 'N/A'].map(opt => (
-                                <label key={opt} className="flex items-center gap-2 p-3 bg-white rounded-lg cursor-pointer hover:bg-gray-50 border">
-                                  <input type="radio" name="outcome" value={opt} checked={storyForm.outcome === opt} onChange={(e) => setStoryForm({...storyForm, outcome: e.target.value})} className="text-rose-500" />
-                                  <span className="text-sm">{opt}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Share your experience (optional)</label>
-                          <textarea value={storyForm.testimonial} onChange={(e) => setStoryForm({...storyForm, testimonial: e.target.value})} placeholder="What helped you most? What would you want other women to know?" rows="4" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none text-sm" />
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Age</label>
-                            <input type="number" value={storyForm.age} onChange={(e) => setStoryForm({...storyForm, age: e.target.value})} placeholder="36" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none text-sm" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Diagnosis</label>
-                            <input type="text" value={storyForm.diagnosis} onChange={(e) => setStoryForm({...storyForm, diagnosis: e.target.value})} placeholder="PCOS" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none text-sm" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Cycles</label>
-                            <input type="number" value={storyForm.cycleCount} onChange={(e) => setStoryForm({...storyForm, cycleCount: e.target.value})} placeholder="3" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none text-sm" />
-                          </div>
-                        </div>
-
-                        <button type="submit" disabled={!storyForm.hadAnotherCycle} className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors">
-                          <Send className="w-4 h-4" />
-                          Submit Story
-                        </button>
-
-                        <p className="text-xs text-gray-500 text-center italic">All submissions are anonymous. Your email will not be shared publicly.</p>
-                      </form>
-                    )}
-                  </div>
                 </div>
                   );
                 })()}
