@@ -104,10 +104,10 @@ const IVFJourneyTool = () => {
 
   // MEDITATION AUDIO LINKS - Update these URLs with your actual meditation file links
   const MEDITATION_LINKS = [
-    { name: '5-Minute Fertility Calm', url: 'https://yourwebsite.com/meditations/5-min.mp3' },
-    { name: '10-Minute Deep Relaxation', url: 'https://yourwebsite.com/meditations/10-min.mp3' },
-    { name: 'IVF Preparation', url: 'https://yourwebsite.com/meditations/ivf-prep.mp3' },
-    { name: 'Two Week Wait Support', url: 'https://yourwebsite.com/meditations/tww.mp3' }
+    { name: '5-Minute Fertility Calm', url: 'https://soundcloud.com/kirsten-coutinho-789254595/5-min-fertility-calm-mp3?si=23073250f4474012ad4a78559a85eef5&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' },
+    { name: '10-Minute Deep Relaxation', url: 'https://soundcloud.com/kirsten-coutinho-789254595/10-min-deep-relaxation-mp3?si=4730fb5d40c34fe3ad58f56a50f763f8&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' },
+    { name: 'IVF Preparation', url: 'https://soundcloud.com/kirsten-coutinho-789254595/ivf-preparation-mp3?si=e9a8df4fb4044b4b98eb03e004133ce7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' },
+    { name: 'Two Week Wait Support', url: 'https://soundcloud.com/kirsten-coutinho-789254595/two-week-wait-mp3?si=03d954a89f9e4a419e541e36547934d2&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' }
   ];
 
   // Load user data when they log in
