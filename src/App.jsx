@@ -1,77 +1,249 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, ChevronRight, Target, CheckCircle, Edit2, X, ChevronDown, ChevronUp, Headphones, BookOpen, TrendingUp, Search, Award, Users, LogOut, AlertCircle, Send } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Heart, ChevronRight, Target, CheckCircle, Edit2, ChevronDown, BookOpen, TrendingUp, Search, Award, Users, LogOut } from 'lucide-react';
 
-// Medical Disclaimer Component - appears at bottom of every page
-const MedicalDisclaimer = () => {
-  return (
-    <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-      <div className="flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-xs text-gray-600 leading-relaxed">
-            <strong className="text-gray-700">Medical Disclaimer:</strong> This tool provides educational information only and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider before starting any supplement protocol or making changes to your fertility treatment plan. Individual results may vary.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+// ─── Access code ──────────────────────────────────────────────────────────────
+const MASTER_ACCESS_CODE = 'embryo2025';
+
+// ─── Design tokens (tracker) ──────────────────────────────────────────────────
+const C = {
+  cream: '#FAF7F2', terracotta: '#C4714A', plum: '#6B3F5E', plum2: '#502E47',
+  sage: '#7A9E87', gold: '#D4A853', charcoal: '#2C2C2C', muted: '#8A8078', white: '#FFFFFF',
 };
 
-// Supportive Footer Text
-const SupportiveFooter = () => {
+// ─── Stage-specific daily tasks ───────────────────────────────────────────────
+const STAGE_TASKS = {
+  preparing: [
+    { id: 'coq10',    label: 'CoQ10 / Ubiquinol',      sub: '400–600mg with food',              icon: '💊', category: 'supplement' },
+    { id: 'dhea',     label: 'DHEA',                    sub: '25–75mg (if low AMH)',              icon: '💊', category: 'supplement' },
+    { id: 'vitD',     label: 'Vitamin D3',              sub: '2000–4000 IU',                     icon: '☀️', category: 'supplement' },
+    { id: 'omega',    label: 'Omega-3',                 sub: '2–3g EPA/DHA',                     icon: '🐟', category: 'supplement' },
+    { id: 'prenatal', label: 'Prenatal Multivitamin',   sub: 'With methylfolate',                icon: '🌿', category: 'supplement' },
+    { id: 'water',    label: 'Water intake',            sub: '2–2.5 litres',                     icon: '💧', category: 'lifestyle'  },
+    { id: 'protein',  label: 'Protein-rich meal',       sub: '30g+ protein today',               icon: '🥚', category: 'nutrition'  },
+    { id: 'movement', label: 'Gentle movement',         sub: '30 min walk / yoga',               icon: '🚶‍♀️', category: 'lifestyle'  },
+    { id: 'sleep',    label: '8 hours sleep',           sub: 'Lights out by 10pm',               icon: '🌙', category: 'lifestyle'  },
+    { id: 'stress',   label: 'Stress relief practice',  sub: 'Meditation / breathwork',          icon: '🧘‍♀️', category: 'mindset'   },
+    { id: 'antiox',   label: 'Antioxidant-rich veg',    sub: '5+ portions',                      icon: '🥦', category: 'nutrition'  },
+    { id: 'alcohol',  label: 'Alcohol-free day',        sub: 'Zero alcohol',                     icon: '🚫', category: 'lifestyle'  },
+  ],
+  stimulation: [
+    { id: 'prenatal', label: 'Prenatal Multivitamin',   sub: 'With methylfolate',                icon: '🌿', category: 'supplement' },
+    { id: 'coq10',    label: 'CoQ10 / Ubiquinol',      sub: '400mg with food',                  icon: '💊', category: 'supplement' },
+    { id: 'meds',     label: 'All medications taken',   sub: 'At correct times',                 icon: '⏰', category: 'supplement' },
+    { id: 'water',    label: 'Water intake',            sub: '2.5–3 litres (extra important)',   icon: '💧', category: 'lifestyle'  },
+    { id: 'protein',  label: 'High-protein meals',      sub: 'Eggs, fish, legumes',              icon: '🥚', category: 'nutrition'  },
+    { id: 'rest',     label: 'Extra rest today',        sub: 'Your body is working hard',        icon: '🛋️', category: 'lifestyle'  },
+    { id: 'caffeine', label: 'Low caffeine',            sub: 'Max 1 coffee / tea',               icon: '☕', category: 'lifestyle'  },
+    { id: 'stress',   label: 'Stress relief practice',  sub: 'Meditation / gentle breathwork',  icon: '🧘‍♀️', category: 'mindset'   },
+    { id: 'antiox',   label: 'Antioxidant foods',       sub: 'Berries, leafy greens',            icon: '🫐', category: 'nutrition'  },
+    { id: 'alcohol',  label: 'Alcohol-free day',        sub: 'Zero alcohol',                     icon: '🚫', category: 'lifestyle'  },
+  ],
+  transfer: [
+    { id: 'prenatal', label: 'Prenatal Multivitamin',   sub: 'With methylfolate',                icon: '🌿', category: 'supplement' },
+    { id: 'vitD',     label: 'Vitamin D3',              sub: 'Continue protocol',                icon: '☀️', category: 'supplement' },
+    { id: 'omega',    label: 'Omega-3',                 sub: 'Supports implantation',            icon: '🐟', category: 'supplement' },
+    { id: 'meds',     label: 'All medications taken',   sub: 'Progesterone at exact time',       icon: '⏰', category: 'supplement' },
+    { id: 'water',    label: 'Water intake',            sub: '2.5 litres minimum',               icon: '💧', category: 'lifestyle'  },
+    { id: 'warmth',   label: 'Keep warm',               sub: 'Warm socks, no cold belly',        icon: '🧦', category: 'lifestyle'  },
+    { id: 'protein',  label: 'Protein with every meal', sub: 'Eggs, legumes, fish',              icon: '🥚', category: 'nutrition'  },
+    { id: 'pineapple',label: 'Pineapple core',          sub: 'Days 1–5 post transfer (bromelain)',icon: '🍍', category: 'nutrition'  },
+    { id: 'rest',     label: 'Rest (not bed rest)',      sub: 'Light activity only',              icon: '🛋️', category: 'lifestyle'  },
+    { id: 'stress',   label: 'Mindfulness',             sub: '10-min guided meditation',         icon: '🧘‍♀️', category: 'mindset'   },
+    { id: 'affirm',   label: 'Positive affirmation',    sub: 'Connect with your body',           icon: '💛', category: 'mindset'   },
+    { id: 'alcohol',  label: 'Alcohol-free day',        sub: 'Zero alcohol',                     icon: '🚫', category: 'lifestyle'  },
+  ],
+  between: [
+    { id: 'coq10',    label: 'CoQ10 / Ubiquinol',      sub: '400–600mg — keep going',           icon: '💊', category: 'supplement' },
+    { id: 'prenatal', label: 'Prenatal Multivitamin',   sub: 'With methylfolate',                icon: '🌿', category: 'supplement' },
+    { id: 'vitD',     label: 'Vitamin D3',              sub: '2000–4000 IU',                     icon: '☀️', category: 'supplement' },
+    { id: 'water',    label: 'Water intake',            sub: '2–2.5 litres',                     icon: '💧', category: 'lifestyle'  },
+    { id: 'movement', label: 'Movement today',          sub: 'Walk, swim, yoga',                 icon: '🚶‍♀️', category: 'lifestyle'  },
+    { id: 'protein',  label: 'Protein-rich meals',      sub: 'Rebuild and nourish',              icon: '🥚', category: 'nutrition'  },
+    { id: 'stress',   label: 'Stress relief practice',  sub: 'You deserve recovery time',        icon: '🧘‍♀️', category: 'mindset'   },
+    { id: 'sleep',    label: 'Quality sleep',           sub: '8 hours priority',                 icon: '🌙', category: 'lifestyle'  },
+    { id: 'antiox',   label: 'Antioxidant foods',       sub: 'Colour on your plate',             icon: '🥦', category: 'nutrition'  },
+    { id: 'alcohol',  label: 'Alcohol-free day',        sub: 'Reset and recover',               icon: '🚫', category: 'lifestyle'  },
+  ],
+};
+
+const CAT_COLORS = {
+  supplement: { bg: '#FDF0EA', border: '#C4714A', dot: '#C4714A', label: 'Supplement' },
+  lifestyle:  { bg: '#EDF4F0', border: '#7A9E87', dot: '#7A9E87', label: 'Lifestyle'  },
+  nutrition:  { bg: '#FDF8EE', border: '#D4A853', dot: '#D4A853', label: 'Nutrition'  },
+  mindset:    { bg: '#F3EEF7', border: '#6B3F5E', dot: '#6B3F5E', label: 'Mindset'    },
+};
+
+const MILESTONES = [
+  { days: 3,  icon: '🌱', label: '3-Day Seed',      msg: 'You planted the seed. Keep going.' },
+  { days: 7,  icon: '⭐', label: '1-Week Star',      msg: 'A full week. Your body is responding.' },
+  { days: 14, icon: '🔥', label: '2-Week Warrior',   msg: '14 days consistent. Real change is happening.' },
+  { days: 21, icon: '💎', label: '21-Day Diamond',   msg: 'Habits are forming at a cellular level.' },
+  { days: 30, icon: '👑', label: '30-Day Queen',     msg: '30 days in. You are building the foundation.' },
+  { days: 60, icon: '🌟', label: '60-Day Legend',    msg: 'Two months strong. Peak supplement benefit begins.' },
+  { days: 90, icon: '🏆', label: '90-Day Champion',  msg: 'The full egg maturation cycle. This is it.' },
+];
+
+const STAGE_LABELS = {
+  preparing:   'Preparing for Retrieval',
+  stimulation: 'Stimulation Phase',
+  transfer:    'Transfer Prep / TWW',
+  between:     'Between Cycles',
+};
+
+function getTodayKey() { return new Date().toISOString().slice(0, 10); }
+
+// ─── Community data ───────────────────────────────────────────────────────────
+const getCommunityData = (bottleneck) => {
+  const map = {
+    notYet: {
+      count: 203, successRate: 71,
+      topActions: [
+        { action: 'Started CoQ10 90+ days before retrieval', pct: 89 },
+        { action: 'Reduced alcohol completely', pct: 84 },
+        { action: 'Added protein to every meal', pct: 78 },
+        { action: 'Improved sleep to 8 hours', pct: 73 },
+      ],
+      stories: [
+        { text: 'Changed my diet and supplements 3 months before. Got 6 eggs, 4 fertilised, 2 blastocysts. Never expected that from my AMH.', stage: 'First cycle prep, low AMH' },
+        { text: 'Focused on the 90 days. Felt more in control than ever before going in.', stage: 'Preparing, unexplained' },
+      ],
+    },
+    poorFertilisation: {
+      count: 127, successRate: 58,
+      topActions: [
+        { action: 'Partner added antioxidants (zinc, selenium, CoQ10)', pct: 91 },
+        { action: 'Reduced oxidative stress — no alcohol, no processed food', pct: 83 },
+        { action: 'Added DHEA (under clinic guidance)', pct: 67 },
+        { action: 'Switched to ICSI in next cycle', pct: 61 },
+      ],
+      stories: [
+        { text: 'First cycle: 2/9 fertilised. Partner started CoQ10, zinc, vitamin C. Second cycle: 6/8 fertilised. His numbers were the key.', stage: 'Poor fertilisation, male factor' },
+        { text: 'Clinic recommended ICSI and we got much better results. Wish we had done it sooner.', stage: 'Poor fertilisation, unexplained' },
+      ],
+    },
+    earlyArrest: {
+      count: 94, successRate: 62,
+      topActions: [
+        { action: 'Sperm DNA fragmentation testing done', pct: 78 },
+        { action: 'Extended culture to Day 5/6', pct: 74 },
+        { action: 'Both partners on antioxidant protocol', pct: 88 },
+        { action: 'Improved blood sugar and metabolic health', pct: 65 },
+      ],
+      stories: [
+        { text: '3 cycles of arrest. Got DFI testing — 42%. Partner did a 3-month protocol. Next cycle: 2 blastocysts. One is now 18 months old.', stage: 'Early arrest, sperm factor' },
+        { text: 'Extended culture was the shift. Embryos that looked poor at Day 3 became good blasts by Day 5.', stage: 'Day 3 arrest, unknown cause' },
+      ],
+    },
+    fewBlasts: {
+      count: 112, successRate: 64,
+      topActions: [
+        { action: 'CoQ10 400–600mg for 90+ days', pct: 93 },
+        { action: 'Mitochondrial support (L-carnitine)', pct: 71 },
+        { action: 'Melatonin added (clinic-guided)', pct: 58 },
+        { action: 'Reduced strenuous exercise during stims', pct: 69 },
+      ],
+      stories: [
+        { text: 'Went from 1 blast in 3 cycles to 3 blasts in one cycle after doing the full protocol for 90 days.', stage: 'Low blastocyst rate, low AMH' },
+        { text: 'Less is more with exercise during stims. That plus CoQ10 made a real difference for us.', stage: 'Few blasts, endometriosis' },
+      ],
+    },
+    failedImplantation: {
+      count: 156, successRate: 55,
+      topActions: [
+        { action: 'ERA (Endometrial Receptivity Array) testing', pct: 68 },
+        { action: 'Vitamin D levels optimised before transfer', pct: 82 },
+        { action: 'Progesterone protocol reviewed', pct: 74 },
+        { action: 'Anti-inflammatory diet strictly followed', pct: 77 },
+      ],
+      stories: [
+        { text: 'Three failed transfers with good embryos. ERA showed I was post-receptive. Timing adjustment on round 4 — success.', stage: 'Repeated implantation failure' },
+        { text: 'Vitamin D was 28 — severely deficient. Got to 75 before next transfer. That was it.', stage: 'Failed implantation, deficiency found' },
+      ],
+    },
+  };
+  return map[bottleneck] || map.notYet;
+};
+
+// ─── FAQs ─────────────────────────────────────────────────────────────────────
+const faqs = [
+  { q: 'When should I start taking CoQ10?', a: 'Ideally 90 days before your egg collection. This is the full maturation cycle of an egg. Starting earlier is always better — even a few weeks of supplementation is beneficial.' },
+  { q: 'What form of CoQ10 is best?', a: 'Ubiquinol is the active, reduced form and is significantly more bioavailable than ubiquinone, particularly in women over 35. Look for brands that certify ubiquinol content.' },
+  { q: 'How much CoQ10 should I take?', a: 'Most fertility research uses 400–600mg daily. Some protocols for poor responders use up to 800mg. Always discuss dosage with your clinic before changing anything.' },
+  { q: 'Does DHEA help with low AMH?', a: 'There is promising evidence that DHEA supplementation (25–75mg daily) for 3 months prior to retrieval can improve response in low responders. This should only be done under clinic supervision.' },
+  { q: 'What should my partner be taking?', a: 'A good male fertility protocol includes CoQ10 (200–400mg), Zinc (25–30mg), Selenium (55–100mcg), Vitamin C (1000mg), Vitamin E (400 IU), and Omega-3. Allow 74 days minimum — one full sperm cycle.' },
+  { q: 'How important is diet really?', a: 'Diet affects mitochondrial function, inflammation levels, oxidative stress, and hormonal balance — all of which directly impact egg and embryo quality. A Mediterranean-style diet has the strongest evidence base for IVF outcomes.' },
+  { q: 'Can I exercise during IVF?', a: 'During preparation: yes, moderate exercise is beneficial. During stimulation: light movement only (walking, gentle yoga). Avoid high-intensity training, heat, and inversions. During TWW: rest, gentle walking only.' },
+  { q: 'Does stress affect IVF outcomes?', a: 'Chronic stress elevates cortisol, which can interfere with reproductive hormones. Focus on manageable daily stress reduction rather than worrying about stress itself.' },
+  { q: 'What is sperm DNA fragmentation?', a: 'DFI (DNA Fragmentation Index) measures damage to sperm DNA. A normal semen analysis does not test this. High DFI (>25%) is linked to poor fertilisation and early embryo arrest.' },
+  { q: 'Why do embryos arrest before blastocyst?', a: 'Arrest before Day 5 can be caused by poor mitochondrial energy, oxidative stress, chromosomal abnormalities, or sperm DNA fragmentation. The arrest pattern (Day 2, 3, 4) can give clues about the underlying cause.' },
+  { q: 'What is an ERA test and do I need one?', a: 'The ERA (Endometrial Receptivity Array) tests whether your uterine lining is receptive at the time of transfer. Typically recommended after 2+ failed transfers with good-quality embryos.' },
+  { q: 'How do I optimise my vitamin D level?', a: 'Target serum level of 50–80 nmol/L before transfer. Get tested. Most people need 2000–4000 IU daily. Retest after 8–12 weeks of supplementation.' },
+];
+
+// ─── Analysis + supplement logic ──────────────────────────────────────────────
+const getAnalysis = (data) => {
+  const analyses = {
+    notYet:             { bottleneck: 'Pre-Cycle Optimisation',   priority: 'Your opportunity is now — 90 days of preparation can meaningfully change what happens in your retrieval. This is the most powerful window.' },
+    poorFertilisation:  { bottleneck: 'Fertilisation Rate',       priority: 'The fertilisation stage is your key focus. Sperm quality is often the hidden factor — both partners\' preparation matters equally here.' },
+    earlyArrest:        { bottleneck: 'Early Embryo Development', priority: 'Embryos are forming but stalling. Mitochondrial energy, oxidative stress, and sperm DNA integrity are the three areas to investigate.' },
+    fewBlasts:          { bottleneck: 'Blastocyst Conversion',    priority: 'Embryos are starting but not completing development to Day 5. Mitochondrial support and energy availability are your primary focus.' },
+    failedImplantation: { bottleneck: 'Implantation',             priority: 'Good embryos exist but aren\'t implanting. Uterine receptivity, timing, and immune factors are where to direct your next clinic conversation.' },
+  };
+  const base = analyses[data.embryoOutcome] || analyses.notYet;
+  const extras = [];
+  if (data.knownFactors.includes('pcos')) extras.push('PCOS: Inositol (myo-inositol 4g/day) and blood sugar management are specifically relevant for you.');
+  if (data.knownFactors.includes('endometriosis')) extras.push('Endometriosis: Anti-inflammatory focus is critical. Prioritise Omega-3, curcumin, and reducing pro-inflammatory foods.');
+  if (data.knownFactors.includes('lowAmh')) extras.push('Low AMH: DHEA (clinic-guided) and aggressive mitochondrial support (CoQ10 600mg+) are your priority supplements.');
+  if (data.knownFactors.includes('autoimmune')) extras.push('Autoimmune factors: Vitamin D optimisation and anti-inflammatory protocol are particularly important for you.');
+  return { ...base, extras };
+};
+
+const getSupplements = (data) => {
+  const hers = [
+    { name: 'CoQ10 (Ubiquinol)', dose: '400–600mg', timing: 'With breakfast', why: 'Mitochondrial energy for egg quality' },
+    { name: 'Prenatal Multivitamin', dose: '1 daily (with methylfolate)', timing: 'With food', why: 'Foundation micronutrients' },
+    { name: 'Vitamin D3', dose: '2000–4000 IU', timing: 'With fatty meal', why: 'Implantation and immune support' },
+    { name: 'Omega-3 (EPA/DHA)', dose: '2–3g daily', timing: 'With meals', why: 'Anti-inflammatory, supports embryo development' },
+  ];
+  if (data.knownFactors.includes('pcos')) hers.push({ name: 'Myo-Inositol', dose: '4g daily', timing: 'Split AM/PM', why: 'PCOS-specific: insulin sensitivity and egg quality' });
+  if (data.knownFactors.includes('endometriosis')) hers.push({ name: 'Curcumin', dose: '500mg (with black pepper)', timing: 'With food', why: 'Anti-inflammatory support for endometriosis' });
+  if (data.knownFactors.includes('lowAmh')) hers.push({ name: 'DHEA', dose: '25–50mg (clinic guidance required)', timing: 'Morning', why: 'Low AMH: may improve response in poor responders' });
+  if (data.previousPregnancies.includes('miscarriage')) hers.push({ name: 'Vitamin B6 (P5P form)', dose: '50–100mg', timing: 'With food', why: 'Progesterone support, relevant with miscarriage history' });
+  if (['earlyArrest','fewBlasts'].includes(data.embryoOutcome)) hers.push({ name: 'L-Carnitine', dose: '2–3g daily', timing: 'Before meals', why: 'Mitochondrial support for embryo development' });
+  const his = [
+    { name: 'CoQ10', dose: '200–400mg', timing: 'With food', why: 'Sperm mitochondrial energy and motility' },
+    { name: 'Zinc', dose: '25–30mg', timing: 'With food', why: 'Sperm production and DNA integrity' },
+    { name: 'Selenium', dose: '55–100mcg', timing: 'Daily', why: 'Antioxidant protection for sperm' },
+    { name: 'Vitamin C', dose: '1000mg', timing: 'Daily', why: 'Reduces oxidative damage to sperm DNA' },
+  ];
+  return { hers, his };
+};
+
+// ─── Small reusable components ────────────────────────────────────────────────
+function MedicalDisclaimer() {
   return (
-    <div className="mt-6 text-center">
-      <p className="text-sm text-gray-500 italic">This space is here to support you, not pressure you.</p>
+    <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <p className="text-xs text-gray-500 text-center">
+        This tool is for informational and support purposes only. It is not medical advice. Always consult your fertility clinic before starting, stopping or changing any supplement or treatment.
+      </p>
     </div>
   );
-};
+}
 
 const FocusSection = ({ title, color, items }) => {
   const [expanded, setExpanded] = useState({});
-  
-  const getColors = (col) => {
-    if (col === 'rose') return { bg: 'bg-rose-50', text: 'text-rose-600', dot: 'text-rose-500' };
-    if (col === 'purple') return { bg: 'bg-purple-50', text: 'text-purple-600', dot: 'text-purple-500' };
-    return { bg: 'bg-blue-50', text: 'text-blue-600', dot: 'text-blue-500' };
-  };
-  
-  const colors = getColors(color);
-  
+  const tc = color === 'rose' ? 'text-rose-600' : color === 'purple' ? 'text-purple-600' : 'text-blue-600';
   return (
     <div className="border-l-4 border-gray-300 pl-4">
-      <h3 className={`font-medium ${colors.text} mb-3`}>{title}</h3>
+      <h3 className={`font-medium ${tc} mb-3`}>{title}</h3>
       <div className="space-y-2">
         {items.map((item, i) => (
           <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
-            <button
-              onClick={() => setExpanded(prev => ({ ...prev, [i]: !prev[i] }))}
-              className="w-full flex items-center justify-between p-3 hover:bg-gray-50 transition-colors text-left"
-            >
-              <div className="flex items-start gap-2 flex-1">
-                <span className={`${colors.dot} mt-1`}>•</span>
-                <span className="text-sm text-gray-700 font-medium">{item.label}</span>
-              </div>
-              {expanded[i] ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            <button onClick={() => setExpanded(p => ({ ...p, [i]: !p[i] }))} className="w-full flex items-center justify-between p-3 hover:bg-gray-50 transition-colors text-left">
+              <span className="text-sm text-gray-700 font-medium">{item.label}</span>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expanded[i] ? 'rotate-180' : ''}`} />
             </button>
-            {expanded[i] && (
-              <div className={`${colors.bg} p-4 border-t`}>
-                <p className="text-sm text-gray-700 leading-relaxed">{item.detail}</p>
-                {item.hasAudio && item.audioLinks && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                      <Headphones className="w-4 h-4" /> {item.audioNote}
-                    </p>
-                    <div className="space-y-2">
-                      {item.audioLinks.map((link, idx) => (
-                        <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="block text-xs text-blue-600 hover:underline">
-                          {link.name}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            {expanded[i] && <div className="p-3 bg-gray-50 border-t text-sm text-gray-600 leading-relaxed">{item.detail}</div>}
           </div>
         ))}
       </div>
@@ -79,986 +251,721 @@ const FocusSection = ({ title, color, items }) => {
   );
 };
 
-const IVFJourneyTool = () => {
+// ─── Tracker sub-components ───────────────────────────────────────────────────
+function Confetti({ active }) {
+  if (!active) return null;
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 }}>
+      {Array.from({ length: 24 }, (_, i) => (
+        <div key={i} style={{
+          position: 'absolute', width: 10, height: 10, borderRadius: i % 3 === 0 ? '50%' : 2,
+          backgroundColor: [C.terracotta, C.gold, C.plum, C.sage, '#E8A87C'][i % 5],
+          left: `${5 + (i * 4.1) % 90}%`, top: '-10px',
+          animation: `cfFall ${1.2 + (i % 3) * 0.4}s ease-in forwards`,
+          animationDelay: `${(i % 5) * 0.08}s`,
+        }} />
+      ))}
+      <style>{`@keyframes cfFall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }`}</style>
+    </div>
+  );
+}
+
+function MilestoneToast({ milestone, onClose }) {
+  useEffect(() => { const t = setTimeout(onClose, 5000); return () => clearTimeout(t); }, [onClose]);
+  return (
+    <div style={{
+      position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+      backgroundColor: C.charcoal, color: C.white, borderRadius: 20, padding: '16px 24px',
+      display: 'flex', alignItems: 'center', gap: 14, zIndex: 1000, maxWidth: 340,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.35)', animation: 'slideUp 0.4s ease',
+    }}>
+      <span style={{ fontSize: 32 }}>{milestone.icon}</span>
+      <div>
+        <div style={{ fontWeight: 700, fontSize: 15 }}>{milestone.label} Unlocked!</div>
+        <div style={{ fontSize: 13, color: '#C8C0B8', marginTop: 3 }}>{milestone.msg}</div>
+      </div>
+      <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#999', cursor: 'pointer', fontSize: 20, marginLeft: 4 }}>×</button>
+      <style>{`@keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }`}</style>
+    </div>
+  );
+}
+
+function WaterTracker({ glasses, onSet }) {
+  return (
+    <div style={{ backgroundColor: '#EEF5FF', borderRadius: 16, padding: 16, border: '1.5px solid #BDD5F0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#2B5F8E' }}>💧 Water Tracker</span>
+        <span style={{ fontSize: 13, color: '#5A8AB0' }}>{glasses}/8 glasses</span>
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <button key={i} onClick={() => onSet(i < glasses ? i : i + 1)} style={{
+            width: 38, height: 44, borderRadius: 10, border: 'none', cursor: 'pointer',
+            backgroundColor: i < glasses ? '#4A9FD4' : '#C8DDEF', fontSize: 18,
+            transition: 'all 0.15s ease', transform: i < glasses ? 'scale(1.05)' : 'scale(1)',
+          }}>💧</button>
+        ))}
+      </div>
+      {glasses >= 8 && <div style={{ marginTop: 10, fontSize: 12, color: '#2B7A4A', fontWeight: 600 }}>✅ Daily water goal complete!</div>}
+    </div>
+  );
+}
+
+const MOODS = ['😔','😐','🙂','😊','🌟'];
+const MOOD_LABELS = ['Hard day','Okay','Good','Great','Amazing'];
+function MoodTracker({ mood, onSet }) {
+  return (
+    <div style={{ backgroundColor: '#FDF0F8', borderRadius: 16, padding: 16, border: '1.5px solid #E8C4DC' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: C.plum, marginBottom: 12 }}>🌸 How are you feeling today?</div>
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'space-around' }}>
+        {MOODS.map((m, i) => (
+          <button key={i} onClick={() => onSet(i)} style={{
+            background: 'none', border: `2px solid ${mood === i ? C.plum : 'transparent'}`,
+            borderRadius: 12, padding: '6px 8px', cursor: 'pointer', textAlign: 'center',
+            backgroundColor: mood === i ? '#EFE4F5' : 'transparent', transition: 'all 0.2s',
+          }}>
+            <div style={{ fontSize: 22 }}>{m}</div>
+            <div style={{ fontSize: 10, color: C.plum, marginTop: 2 }}>{MOOD_LABELS[i]}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TaskCard({ task, checked, onToggle, animating }) {
+  const cat = CAT_COLORS[task.category];
+  return (
+    <div onClick={onToggle} style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 14,
+      border: `1.5px solid ${checked ? cat.border : '#EAE5DF'}`,
+      backgroundColor: checked ? cat.bg : C.white, cursor: 'pointer', transition: 'all 0.25s ease',
+      transform: animating ? 'scale(1.02)' : 'scale(1)',
+      boxShadow: checked ? `0 2px 12px ${cat.border}30` : '0 1px 4px rgba(0,0,0,0.04)',
+    }}>
+      <div style={{
+        width: 26, height: 26, borderRadius: 8,
+        border: `2px solid ${checked ? cat.border : '#C8C0B8'}`,
+        backgroundColor: checked ? cat.border : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s',
+      }}>
+        {checked && <svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 5L5 9L12 1" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      </div>
+      <span style={{ fontSize: 20, flexShrink: 0 }}>{task.icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: checked ? cat.dot : C.charcoal, textDecoration: checked ? 'line-through' : 'none', opacity: checked ? 0.7 : 1 }}>{task.label}</div>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{task.sub}</div>
+      </div>
+      <span style={{ fontSize: 10, color: cat.dot, backgroundColor: cat.bg, border: `1px solid ${cat.border}40`, borderRadius: 20, padding: '2px 8px', flexShrink: 0, fontWeight: 600 }}>{cat.label}</span>
+    </div>
+  );
+}
+
+function WeekCalendar({ completionHistory }) {
+  const today = getTodayKey();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6 - i));
+    const key = d.toISOString().slice(0, 10);
+    return { key, label: d.toLocaleDateString('en-GB', { weekday: 'short' }), pct: completionHistory[key] || 0 };
+  });
+  return (
+    <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
+      {days.map(d => {
+        const filled = d.pct >= 80; const partial = d.pct >= 40 && !filled;
+        return (
+          <div key={d.key} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: 10, color: C.muted, marginBottom: 6, textTransform: 'uppercase' }}>{d.label}</div>
+            <div style={{
+              height: 32, borderRadius: 8,
+              backgroundColor: filled ? C.terracotta : partial ? '#E8A87C' : d.key === today ? '#EDE8E2' : '#F5F2EE',
+              border: d.key === today ? `2px solid ${C.terracotta}` : '2px solid transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+            }}>{filled ? '✓' : partial ? '·' : ''}</div>
+            {d.pct > 0 && <div style={{ fontSize: 9, color: C.muted, marginTop: 4 }}>{d.pct}%</div>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+export default function App() {
+  // ── Auth state ───────────────────────────────────────────────────────────
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [accessCodeInput, setAccessCodeInput] = useState('');
   const [loginError, setLoginError] = useState('');
+
+  // ── App flow ─────────────────────────────────────────────────────────────
   const [step, setStep] = useState('welcome');
   const [section, setSection] = useState(1);
   const [activeTab, setActiveTab] = useState('plan');
+
+  // ── Profile data ─────────────────────────────────────────────────────────
   const [data, setData] = useState({
-    age: '', cycles: '', stage: '', embryoOutcome: '',
-    pregnancies: { chemical: false, miscarriage: false, liveBirth: false, none: false },
-    doctorComments: [], knownFactors: [], highStress: '', currentApproach: [], biggestFear: '',
-    journalEntries: [], progressTracking: { supplementDays: 0, meditationDays: 0, exerciseDays: 0 }
+    age: '', cyclesCompleted: '0', previousPregnancies: [],
+    currentStage: 'preparing', embryoOutcome: 'notYet', knownFactors: [],
+    currentApproach: [], biggestFears: [], journalEntries: [],
   });
-  
-  const [journalText, setJournalText] = useState('');
-  const [todayCheckin, setTodayCheckin] = useState({ supplements: false, meditation: false, exercise: false });
+
+  // ── Daily tracker state ──────────────────────────────────────────────────
+  const todayKey = getTodayKey();
+  const [checked, setChecked] = useState(() => { try { return JSON.parse(localStorage.getItem(`ep_tracker_${todayKey}`) || '{}'); } catch { return {}; } });
+  const [water, setWater] = useState(() => { try { return parseInt(localStorage.getItem(`ep_water_${todayKey}`) || '0'); } catch { return 0; } });
+  const [mood, setMood] = useState(() => { try { const v = localStorage.getItem(`ep_mood_${todayKey}`); return v !== null ? parseInt(v) : null; } catch { return null; } });
+  const [animating, setAnimating] = useState({});
+  const [confetti, setConfetti] = useState(false);
+  const [milestoneToast, setMilestoneToast] = useState(null);
+  const [streak, setStreak] = useState(() => { try { return parseInt(localStorage.getItem('ep_streak') || '0'); } catch { return 0; } });
+  const [totalDays, setTotalDays] = useState(() => { try { return parseInt(localStorage.getItem('ep_totaldays') || '0'); } catch { return 0; } });
+  const [completionHistory, setCompletionHistory] = useState(() => { try { return JSON.parse(localStorage.getItem('ep_history') || '{}'); } catch { return {}; } });
+  const prevPct = useRef(0);
+
+  // ── Other UI state ───────────────────────────────────────────────────────
   const [questionSearch, setQuestionSearch] = useState('');
+  const [journalText, setJournalText] = useState('');
 
-  // MASTER ACCESS CODE - This is your admin code to access the tool
-  const MASTER_ACCESS_CODE = 'embryo2025';
-
-  // MEDITATION AUDIO LINKS - Update these URLs with your actual meditation file links
-  const MEDITATION_LINKS = [
-    { name: '5-Minute Fertility Calm', url: 'https://soundcloud.com/kirsten-coutinho-789254595/5-min-fertility-calm-mp3?si=23073250f4474012ad4a78559a85eef5&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' },
-    { name: '10-Minute Deep Relaxation', url: 'https://soundcloud.com/kirsten-coutinho-789254595/10-min-deep-relaxation-mp3?si=4730fb5d40c34fe3ad58f56a50f763f8&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' },
-    { name: 'IVF Preparation', url: 'https://soundcloud.com/kirsten-coutinho-789254595/ivf-preparation-mp3?si=e9a8df4fb4044b4b98eb03e004133ce7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' },
-    { name: 'Two Week Wait Support', url: 'https://soundcloud.com/kirsten-coutinho-789254595/two-week-wait-mp3?si=03d954a89f9e4a419e541e36547934d2&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing' }
-  ];
-
-  // Load user data when they log in
+  // ── Persist profile + app state ──────────────────────────────────────────
   useEffect(() => {
-    if (isAuthenticated && userEmail) {
-      loadUserData(userEmail);
-    }
-  }, [isAuthenticated, userEmail]);
-
-  // Save data whenever it changes
-  useEffect(() => {
-    if (isAuthenticated && userEmail) {
-      saveUserData(userEmail, data, step, section, activeTab);
-    }
-  }, [data, step, section, activeTab, isAuthenticated, userEmail]);
+    if (!userEmail) return;
+    try { localStorage.setItem(`ivf_journey_${userEmail}`, JSON.stringify({ data, step, section, activeTab, lastUpdated: new Date().toISOString() })); }
+    catch (e) {}
+  }, [data, step, section, activeTab, userEmail]);
 
   const loadUserData = (email) => {
     try {
-      const savedData = localStorage.getItem(`ivf_journey_${email}`);
-      if (savedData) {
-        const parsed = JSON.parse(savedData);
-        setData(parsed.data || data);
-        setStep(parsed.step || 'welcome');
-        setSection(parsed.section || 1);
-        setActiveTab(parsed.activeTab || 'plan');
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
+      const saved = localStorage.getItem(`ivf_journey_${email}`);
+      if (saved) { const p = JSON.parse(saved); if (p.data) setData(p.data); if (p.step) setStep(p.step); if (p.section) setSection(p.section); if (p.activeTab) setActiveTab(p.activeTab); }
+    } catch (e) {}
   };
 
-  const saveUserData = (email, userData, currentStep, currentSection, currentTab) => {
-    try {
-      const dataToSave = {
-        data: userData,
-        step: currentStep,
-        section: currentSection,
-        activeTab: currentTab,
-        lastUpdated: new Date().toISOString()
-      };
-      localStorage.setItem(`ivf_journey_${email}`, JSON.stringify(dataToSave));
-    } catch (error) {
-      console.error('Error saving user data:', error);
+  // ── Tracker effects ──────────────────────────────────────────────────────
+  const tasks = STAGE_TASKS[data.currentStage] || STAGE_TASKS.preparing;
+  const completedCount = tasks.filter(t => checked[t.id]).length;
+  const completionPct = tasks.length ? Math.round((completedCount / tasks.length) * 100) : 0;
+
+  useEffect(() => {
+    localStorage.setItem(`ep_tracker_${todayKey}`, JSON.stringify(checked));
+    if (!tasks.length) return;
+    const pct = Math.round((tasks.filter(t => checked[t.id]).length / tasks.length) * 100);
+    const newHistory = { ...completionHistory, [todayKey]: pct };
+    setCompletionHistory(newHistory);
+    localStorage.setItem('ep_history', JSON.stringify(newHistory));
+    if (pct >= 80 && prevPct.current < 80) {
+      const ns = streak + 1; const nt = totalDays + 1;
+      setStreak(ns); setTotalDays(nt);
+      localStorage.setItem('ep_streak', String(ns));
+      localStorage.setItem('ep_totaldays', String(nt));
+      setConfetti(true); setTimeout(() => setConfetti(false), 3000);
+      const exact = MILESTONES.find(m => ns === m.days);
+      if (exact) setMilestoneToast(exact);
     }
+    prevPct.current = pct;
+  }, [checked]);
+
+  useEffect(() => { localStorage.setItem(`ep_water_${todayKey}`, String(water)); }, [water]);
+  useEffect(() => { if (mood !== null) localStorage.setItem(`ep_mood_${todayKey}`, String(mood)); }, [mood]);
+
+  const toggleTask = (id) => {
+    setAnimating(a => ({ ...a, [id]: true }));
+    setTimeout(() => setAnimating(a => ({ ...a, [id]: false })), 300);
+    setChecked(c => ({ ...c, [id]: !c[id] }));
   };
 
+  // ── Auth handlers ────────────────────────────────────────────────────────
   const handleLogin = (e) => {
     e.preventDefault();
     const email = emailInput.trim().toLowerCase();
     const code = accessCodeInput.trim();
-
-    if (!email || !code) {
-      setLoginError('Please enter both email and access code');
-      return;
-    }
-
-    if (!email.includes('@')) {
-      setLoginError('Please enter a valid email address');
-      return;
-    }
-
+    if (!email || !code) { setLoginError('Please enter both email and access code'); return; }
+    if (!email.includes('@')) { setLoginError('Please enter a valid email address'); return; }
     if (code === MASTER_ACCESS_CODE) {
-      setIsAuthenticated(true);
-      setUserEmail(email);
-      setLoginError('');
-      setEmailInput('');
-      setAccessCodeInput('');
+      setIsAuthenticated(true); setUserEmail(email); setLoginError('');
+      setEmailInput(''); setAccessCodeInput(''); loadUserData(email);
     } else {
-      setLoginError('Incorrect access code. Please check your code and try again.');
+      setLoginError('Incorrect access code. Please check your purchase confirmation email.');
       setAccessCodeInput('');
     }
   };
 
   const handleLogout = () => {
-    if (window.confirm('We will be right here when you come back. Are you sure you want to log out?')) {
-      setIsAuthenticated(false);
-      setUserEmail('');
-      setStep('welcome');
-      setSection(1);
-      setActiveTab('plan');
+    if (window.confirm('Log out? Your data is saved and will be here when you return.')) {
+      setIsAuthenticated(false); setUserEmail(''); setStep('welcome'); setSection(1); setActiveTab('plan');
     }
   };
 
-  // Show login screen if not authenticated
+  // ── Login ────────────────────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 flex items-center justify-center p-6">
-        <div className="max-w-md w-full">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
-                <Heart className="w-8 h-8 text-rose-500" />
-              </div>
-              <h1 className="text-2xl font-light text-gray-800 mb-2">The Embryo Protocol</h1>
-              <p className="text-gray-600 text-sm">Your private IVF support space — available whenever you need it.</p>
-            </div>
-
-            <form onSubmit={handleLogin}>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-2">Your Email</label>
-                <input
-                  type="email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
-                  autoFocus
-                />
-                <p className="text-xs text-gray-500 mt-1">This is your unique identifier - use the same email each time</p>
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-gray-700 font-medium mb-2">Access Code</label>
-                <input
-                  type="password"
-                  value={accessCodeInput}
-                  onChange={(e) => setAccessCodeInput(e.target.value)}
-                  placeholder="Enter your access code"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent outline-none"
-                />
-                {loginError && (
-                  <p className="text-red-500 text-sm mt-2">{loginError}</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-xl font-medium transition-colors"
-              >
-                Access Your Protocol
-              </button>
-            </form>
-
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-xs text-gray-500 text-center mb-3">
-                Your data is saved to your browser and tied to your email. Use the same email each time to access your saved progress.
-              </p>
-              <p className="text-xs text-gray-500 text-center">
-                Don't have an access code? This tool is available with the Embryo Quality course.
-              </p>
-            </div>
+        <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <Heart className="w-12 h-12 text-rose-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-light text-gray-800 mb-2">The Embryo Protocol</h1>
+            <p className="text-gray-500 text-sm">Your private IVF support space — available whenever you need it.</p>
           </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+              <input type="email" value={emailInput} onChange={e => setEmailInput(e.target.value)} placeholder="your@email.com" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Access code</label>
+              <input type="password" value={accessCodeInput} onChange={e => setAccessCodeInput(e.target.value)} placeholder="From your purchase confirmation" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none" />
+            </div>
+            {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
+            <button type="submit" className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-lg font-medium transition-colors">Access Your Protocol →</button>
+          </form>
+          <p className="text-center text-xs text-gray-400 mt-6">Your data is stored privately on your device</p>
         </div>
       </div>
     );
   }
 
-  const handleMulti = (field, value) => {
-    setData(prev => ({
-      ...prev,
-      [field]: prev[field].includes(value) ? prev[field].filter(i => i !== value) : [...prev[field], value]
-    }));
-  };
-
-  const getSupplements = () => {
-    const his = [
-      { name: 'Daily Multivitamin with methylfolate', why: 'Fills nutritional gaps and supports sperm health' },
-      { name: 'CoQ10 400mg', why: 'Improves sperm energy and motility' },
-      { name: 'Vitamin C 500mg', why: 'Protects sperm from damage' },
-      { name: 'Fish oil DHA 900mg', why: 'Supports sperm membrane health' },
-      { name: 'Vitamin D 4000IU', why: 'Improves testosterone and sperm quality' },
-      { name: 'R-alpha lipoic acid 200-300mg', why: 'Antioxidant for sperm DNA protection' },
-      { name: 'L-carnitine 1000mg', why: 'Provides energy for sperm motility' }
-    ];
-    
-    let her = [
-      { name: 'Prenatal with 800mcg methylfolate', stop: 'Continue', why: 'Essential for egg quality and pregnancy' },
-      { name: 'CoQ10 400mg', stop: 'Day before transfer', why: 'Boosts egg energy and quality' },
-      { name: 'Vitamin C 500mg', stop: 'Day before retrieval', why: 'Protects eggs from stress' },
-      { name: 'Vitamin D 4000IU', stop: 'Continue', why: 'Improves egg quality and implantation' }
-    ];
-
-    if (data.knownFactors.includes('pcos')) {
-      her.push({ name: 'Myo-inositol 4mg', stop: 'Day before retrieval', why: 'Improves egg quality in PCOS' });
-      her.push({ name: 'N-acetylcysteine 600mg', stop: 'Day before retrieval', why: 'Reduces inflammation' });
-    }
-    if (data.knownFactors.includes('endometriosis')) {
-      if (!her.find(s => s.name.includes('R-alpha'))) {
-        her.push({ name: 'R-alpha lipoic acid 200mg', stop: 'Day before retrieval', why: 'Reduces inflammation' });
-      }
-    }
-    if (data.pregnancies.miscarriage) {
-      her.push({ name: 'Vitamin E 200IU', stop: 'Day before transfer', why: 'Supports implantation' });
-    }
-    if (['poorFertilisation', 'earlyArrest', 'fewBlast'].includes(data.embryoOutcome)) {
-      if (!her.find(s => s.name.includes('L-carnitine'))) {
-        her.push({ name: 'L-carnitine 3mg', stop: 'Day before retrieval', why: 'Boosts egg energy' });
-      }
-    }
-    return { his, her };
-  };
-
-  const getAnalysis = () => {
-    let bottleneck = '';
-    let priorities = [];
-    
-    if (data.embryoOutcome === 'notYet') {
-      bottleneck = 'You are preparing for your first IVF cycle - this is the perfect time to optimize. The next 90-120 days of preparation can significantly impact your egg and sperm quality.';
-      priorities = [
-        'Start comprehensive supplement protocol for both partners now',
-        'Establish healthy foundations: sleep 7-8 hours, Mediterranean diet, daily movement',
-        'Begin stress management practices - they will serve you throughout this journey'
-      ];
-    } else if (data.embryoOutcome === 'poorFertilisation') {
-      bottleneck = 'Fertilization quality - eggs and sperm meeting but not creating viable embryos efficiently';
-      priorities = ['Oxidative stress reduction for both partners', 'Mediterranean fertility diet', 'Partner sperm DNA protocol'];
-    } else if (data.embryoOutcome === 'earlyArrest') {
-      bottleneck = 'Early development - embryos stopping before blastocyst';
-      priorities = ['Mitochondrial support: CoQ10, L-carnitine', '7-8 hours quality sleep', 'Reduce inflammation'];
-    } else if (data.embryoOutcome === 'fewBlast') {
-      bottleneck = 'Blastocyst conversion - few embryos reach day 5 or 6';
-      priorities = ['Full antioxidant protocol 90 days', 'Discuss time-lapse incubation', 'Anti-inflammatory focus'];
-    } else if (data.embryoOutcome === 'failedImplantation') {
-      bottleneck = 'Implantation - good blasts not sticking';
-      priorities = ['Uterine support: Vitamin E, omega-3s', 'Discuss testing with doctor', 'Stress management'];
-    }
-
-    const secondary = [];
-    if (data.knownFactors.includes('endometriosis')) secondary.push('Endo inflammation affects egg quality');
-    if (data.knownFactors.includes('pcos')) secondary.push('PCOS impacts egg maturation');
-    
-    let guidance = '';
-    if (data.stage === 'preparing') {
-      if (data.embryoOutcome === 'notYet') {
-        guidance = 'You have 90-120 days to optimize before your first cycle. This is ideal timing! Focus on building strong foundations now.';
-      } else {
-        guidance = '90-120 days pre-cycle is ideal. Build foundations: supplements, diet, sleep, stress.';
-      }
-    } else if (data.stage === 'between') {
-      guidance = 'Use this time wisely. Start protocol now for best next cycle.';
-    } else if (data.stage === 'transfer') {
-      guidance = 'Focus on uterine environment. Stop CoQ10, Vit E day before.';
-    }
-
-    return { bottleneck, priorities, secondary, guidance };
-  };
-
-  const getCommunityData = () => {
-    const outcome = data.embryoOutcome;
-    const communityData = {
-      notYet: {
-        count: 203, pattern: 'preparing for their first cycle', successRate: '76%',
-        successMetric: 'optimized before cycle 1 and got better outcomes', avgTime: '12-16 weeks',
-        topActions: [
-          { action: 'Started supplements 90+ days before', percent: '94%' },
-          { action: 'Partner on protocol too', percent: '87%' },
-          { action: 'Mediterranean diet', percent: '81%' },
-          { action: 'Stress management practice', percent: '76%' }
-        ],
-        stories: [
-          { text: 'I spent 4 months preparing before my first cycle. We got 8 mature eggs and 4 blasts - my doctor said the quality was exceptional for my age.', age: 37, diagnosis: 'Unexplained', cycles: 1 },
-          { text: 'Getting my partner on supplements made such a difference. Our fertilization rate was 90% on our first cycle.', age: 34, diagnosis: 'Male factor', cycles: 1 },
-          { text: 'The preparation time gave me confidence. I walked into retrieval knowing I had done everything I could.', age: 36, diagnosis: 'DOR', cycles: 1 }
-        ]
-      },
-      poorFertilisation: {
-        count: 127, pattern: 'poor fertilization rates', successRate: '68%',
-        successMetric: 'improved fertilization on next cycle', avgTime: '14-18 weeks',
-        topActions: [
-          { action: 'Full antioxidant protocol both partners', percent: '92%' },
-          { action: 'Partner sperm DNA testing', percent: '84%' },
-          { action: 'CoQ10 + L-carnitine combo', percent: '88%' },
-          { action: 'Mediterranean anti-inflammatory diet', percent: '79%' }
-        ],
-        stories: [
-          { text: 'After 2 failed cycles with 30% fertilization, we both did the 90-day protocol. Next cycle: 85% fertilization. The quality difference was night and day.', age: 36, diagnosis: 'PCOS', cycles: 3 },
-          { text: 'Getting my partner tested for sperm DNA fragmentation changed everything. High oxidative stress was the issue - antioxidants fixed it.', age: 34, diagnosis: 'Male factor', cycles: 2 },
-          { text: 'I was so discouraged after poor fertilization twice. The protocol gave me hope and actual results - 7 out of 9 fertilized beautifully.', age: 38, diagnosis: 'Unexplained', cycles: 3 }
-        ]
-      },
-      earlyArrest: {
-        count: 94, pattern: 'early arrest challenges', successRate: '71%',
-        successMetric: 'reached blastocyst stage', avgTime: '16-20 weeks',
-        topActions: [
-          { action: 'Mitochondrial support (CoQ10, L-carnitine)', percent: '95%' },
-          { action: '8+ hours sleep priority', percent: '89%' },
-          { action: 'Anti-inflammatory protocol', percent: '82%' },
-          { action: 'Both partners on full protocol', percent: '77%' }
-        ],
-        stories: [
-          { text: 'Two cycles of day 3 arrest. After mitochondrial support for both of us, we got 5 blasts from 8 embryos. Energy at the cellular level matters.', age: 35, diagnosis: 'Endometriosis', cycles: 3 },
-          { text: 'Sleep was my missing piece. Prioritizing 8 hours plus CoQ10 changed my embryo development completely.', age: 37, diagnosis: 'DOR', cycles: 2 },
-          { text: 'After early arrest twice, the inflammation focus plus supplements got us 3 beautiful blasts. Now pregnant with the first one.', age: 36, diagnosis: 'Endometriosis', cycles: 3 }
-        ]
-      },
-      fewBlast: {
-        count: 112, pattern: 'low blastocyst conversion', successRate: '64%',
-        successMetric: 'improved blast numbers', avgTime: '14-18 weeks',
-        topActions: [
-          { action: 'Full antioxidant protocol 90+ days', percent: '91%' },
-          { action: 'Anti-inflammatory diet', percent: '86%' },
-          { action: 'Requested extended culture/time-lapse', percent: '73%' },
-          { action: 'Both partners optimized together', percent: '81%' }
-        ],
-        stories: [
-          { text: 'From 1 blast out of 12 embryos to 6 blasts out of 14. The protocol works if you give it time.', age: 38, diagnosis: 'DOR', cycles: 3 },
-          { text: 'We went from 2 blasts to 7 blasts after the full 90-day protocol. Quality over quantity became quality AND quantity.', age: 35, diagnosis: 'PCOS', cycles: 2 },
-          { text: 'The antioxidant protocol plus time-lapse incubation gave us 5 blasts when we previously got 1. Science plus optimization.', age: 37, diagnosis: 'Unexplained', cycles: 3 }
-        ]
-      },
-      failedImplantation: {
-        count: 156, pattern: 'implantation challenges', successRate: '63%',
-        successMetric: 'successful implantation', avgTime: '12-16 weeks',
-        topActions: [
-          { action: 'Uterine support (Vitamin E, omega-3s)', percent: '89%' },
-          { action: 'ERA/EMMA/ALICE testing', percent: '76%' },
-          { action: 'Immune protocol discussion with RE', percent: '68%' },
-          { action: 'Stress management focus', percent: '84%' }
-        ],
-        stories: [
-          { text: 'Three failed transfers with good blasts. ERA showed I needed an extra day of progesterone. Next transfer stuck.', age: 34, diagnosis: 'Unexplained', cycles: 4 },
-          { text: 'Added Vitamin E and omega-3s for uterine support. Fourth transfer was the charm - now 12 weeks pregnant.', age: 36, diagnosis: 'Endometriosis', cycles: 4 },
-          { text: 'After 2 chemical pregnancies, immune testing found elevated NK cells. Protocol adjustment made the difference.', age: 35, diagnosis: 'Recurrent loss', cycles: 3 }
-        ]
-      }
-    };
-    return communityData[outcome] || {
-      count: 700, pattern: 'working to optimize their IVF outcomes', successRate: '69%',
-      successMetric: 'reported improvements', avgTime: '12-18 weeks',
-      topActions: [
-        { action: 'Comprehensive supplement protocol', percent: '90%' },
-        { action: 'Mediterranean fertility diet', percent: '83%' },
-        { action: 'Stress management practices', percent: '78%' },
-        { action: 'Partner involvement', percent: '72%' }
-      ],
-      stories: [
-        { text: 'The protocol gave me control when everything felt chaotic. That mindset shift was as important as the supplements.', age: 35, diagnosis: 'Unexplained', cycles: 2 },
-        { text: 'Seeing the data personalized to my situation helped me advocate better with my clinic.', age: 37, diagnosis: 'PCOS', cycles: 3 }
-      ]
-    };
-  };
-
-  const faqs = [
-    { q: "Can I drink coffee during IVF?", a: "Yes, but limit to 200mg caffeine per day. Some doctors recommend stopping during the two-week wait." },
-    { q: "Should I do acupuncture?", a: "Research shows mixed results, but many find it helpful for stress. Best timing: weekly during stims and day of transfer." },
-    { q: "Is PGT testing worth it?", a: "Depends on your situation. More helpful if 35 plus, recurrent miscarriage, or repeated failed transfers." },
-    { q: "Can I exercise during stims?", a: "Yes, but switch to gentle movement like walking or yoga. Avoid running, HIIT, and twisting." },
-    { q: "When can I test after transfer?", a: "Blood test is typically 9-12 days post-transfer. Waiting for blood test is most accurate." }
-  ];
-
+  // ── Welcome ──────────────────────────────────────────────────────────────
   if (step === 'welcome') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
-        <div className="max-w-2xl mx-auto pt-12 pb-12">
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-gray-500 italic">You're doing the best you can — and that's enough for today.</p>
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
-              <LogOut className="w-4 h-4" />
-              Log Out
-            </button>
-          </div>
-          
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-100 rounded-full mb-4">
-              <Heart className="w-8 h-8 text-rose-500" />
-            </div>
-            <h1 className="text-3xl font-light text-gray-800 mb-3">The Embryo Protocol</h1>
-            <p className="text-gray-600 max-w-md mx-auto">Your personal fertility coach, available 24/7</p>
-            <p className="text-sm text-gray-500 mt-2">Logged in as: {userEmail}</p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg text-center">
+          <Heart className="w-12 h-12 text-rose-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-light text-gray-800 mb-3">Welcome to The Embryo Protocol</h1>
+          <p className="text-gray-600 mb-2">You're doing the best you can — and that's enough for today.</p>
+          <p className="text-gray-500 text-sm mb-8">We'll start with a short personalisation so your plan reflects your exact situation — not generic advice.</p>
+          <button onClick={() => setStep('assessment')} className="w-full bg-rose-500 hover:bg-rose-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors">
+            Build My Protocol <ChevronRight className="w-5 h-5" />
+          </button>
+          <p className="text-xs text-gray-400 mt-4">Takes about 2 minutes</p>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-            <h2 className="text-xl font-medium text-gray-800 mb-4">What You Get:</h2>
-            <div className="space-y-3">
-              {['Embryo bottleneck identified', 'Personalized supplements', 'Daily progress tracking', 'Quick answers to questions', 'Journal and community support'].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-700">{item}</span>
+  // ── Assessment ───────────────────────────────────────────────────────────
+  const assessmentSections = [
+    {
+      title: 'About Your Journey',
+      fields: [
+        { label: 'Your age', key: 'age', type: 'select', options: ['Under 30','30–34','35–37','38–40','41–43','44+'] },
+        { label: 'IVF cycles completed', key: 'cyclesCompleted', type: 'select', options: ['0 (first cycle)','1','2','3','4','5+'] },
+        { label: 'Previous pregnancies', key: 'previousPregnancies', type: 'multi', options: [{ v:'chemical',l:'Chemical pregnancy' },{ v:'miscarriage',l:'Miscarriage' },{ v:'liveBirth',l:'Live birth' },{ v:'none',l:'None' }] },
+        { label: 'Current stage', key: 'currentStage', type: 'select', options: [{ v:'preparing',l:'Preparing for egg collection' },{ v:'stimulation',l:'Currently stimulating' },{ v:'transfer',l:'Preparing for transfer / TWW' },{ v:'between',l:'Between cycles' }] },
+      ]
+    },
+    {
+      title: 'Your Embryo Journey',
+      fields: [
+        { label: 'What happened with your embryos?', key: 'embryoOutcome', type: 'select', options: [{ v:'notYet',l:'Not yet started / preparing' },{ v:'poorFertilisation',l:'Poor fertilisation rate' },{ v:'earlyArrest',l:'Embryos arrested early (Day 2–4)' },{ v:'fewBlasts',l:'Few made it to blastocyst' },{ v:'failedImplantation',l:'Good embryos — failed implantation' }] },
+        { label: 'Known factors', key: 'knownFactors', type: 'multi', options: [{ v:'pcos',l:'PCOS' },{ v:'endometriosis',l:'Endometriosis' },{ v:'lowAmh',l:'Low AMH' },{ v:'autoimmune',l:'Autoimmune / immune factors' },{ v:'maleFactor',l:'Male factor' },{ v:'thyroid',l:'Thyroid issues' },{ v:'unexplained',l:'Unexplained' }] },
+      ]
+    },
+    {
+      title: 'Right Now',
+      fields: [
+        { label: 'What are you already doing?', key: 'currentApproach', type: 'multi', options: [{ v:'supplements',l:'Taking supplements' },{ v:'diet',l:'Dietary changes' },{ v:'exercise',l:'Exercise routine' },{ v:'stress',l:'Stress management' },{ v:'acupuncture',l:'Acupuncture' },{ v:'nothing',l:'Just getting started' }] },
+        { label: 'What worries you most?', key: 'biggestFears', type: 'multi', options: [{ v:'eggQuality',l:'Egg quality' },{ v:'notEnoughEggs',l:'Not getting enough eggs' },{ v:'fertilisation',l:'Fertilisation failing' },{ v:'embryoArrest',l:'Embryos arresting' },{ v:'implantation',l:'Implantation failing' },{ v:'timeRunningOut',l:'Time running out' }] },
+      ]
+    },
+  ];
+
+  const updateField = (key, value) => setData(p => {
+    const d = { ...p };
+    if (Array.isArray(d[key])) d[key] = d[key].includes(value) ? d[key].filter(v => v !== value) : [...d[key], value];
+    else d[key] = value;
+    return d;
+  });
+
+  if (step === 'assessment') {
+    const sec = assessmentSections[section - 1];
+    const complete = sec.fields.every(f => { const v = data[f.key]; return f.type === 'multi' ? v.length > 0 : !!v; });
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <Heart className="w-6 h-6 text-rose-400" />
+            <span className="text-sm text-gray-500">Step {section} of {assessmentSections.length}</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-1.5 mb-6">
+            <div className="bg-rose-400 h-1.5 rounded-full transition-all" style={{ width: `${(section / assessmentSections.length) * 100}%` }} />
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm border p-8">
+            <h2 className="text-xl font-medium text-gray-800 mb-6">{sec.title}</h2>
+            <div className="space-y-6">
+              {sec.fields.map(field => (
+                <div key={field.key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{field.label}</label>
+                  {field.type === 'select' && (
+                    <select value={data[field.key]} onChange={e => updateField(field.key, e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-400 outline-none">
+                      <option value="">Select...</option>
+                      {field.options.map(o => typeof o === 'string' ? <option key={o} value={o}>{o}</option> : <option key={o.v} value={o.v}>{o.l}</option>)}
+                    </select>
+                  )}
+                  {field.type === 'multi' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {field.options.map(o => {
+                        const val = typeof o === 'string' ? o : o.v;
+                        const label = typeof o === 'string' ? o : o.l;
+                        const sel = data[field.key].includes(val);
+                        return <button key={val} onClick={() => updateField(field.key, val)} className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left ${sel ? 'bg-rose-50 border-rose-400 text-rose-700' : 'border-gray-200 text-gray-700 hover:border-gray-300'}`}>{sel ? '✓ ' : ''}{label}</button>;
+                      })}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
+            <div className="flex gap-3 mt-8">
+              {section > 1 && <button onClick={() => setSection(s => s - 1)} className="px-6 py-3 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50">Back</button>}
+              {section < assessmentSections.length
+                ? <button onClick={() => setSection(s => s + 1)} disabled={!complete} className="flex-1 bg-rose-500 hover:bg-rose-600 disabled:bg-gray-300 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors">Continue <ChevronRight className="w-5 h-5" /></button>
+                : <button onClick={() => setStep('dashboard')} disabled={!complete} className="flex-1 bg-rose-500 hover:bg-rose-600 disabled:bg-gray-300 text-white py-3 rounded-xl font-medium transition-colors">View My Protocol</button>
+              }
+            </div>
           </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-            <button onClick={() => setStep('assessment')} className="w-full bg-rose-500 hover:bg-rose-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2">
-              Start Assessment <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="text-center mb-4">
-            <p className="text-sm text-gray-500 italic">You don't need to carry this perfectly. You just need support — and you're here.</p>
-          </div>
-
-          <SupportiveFooter />
-          <MedicalDisclaimer />
         </div>
       </div>
     );
   }
 
-  if (step === 'assessment') {
-    const complete = section === 4 && data.stage && data.embryoOutcome;
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
-        <div className="max-w-3xl mx-auto pt-8 pb-12">
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-sm text-gray-500 italic">You're doing the best you can — and that's enough for today.</p>
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
-              <LogOut className="w-4 h-4" />
-              Log Out
-            </button>
-          </div>
-          
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-2 flex-1 bg-gray-200 rounded-full">
-                <div className="h-full bg-rose-500 transition-all" style={{ width: `${(section / 4) * 100}%` }} />
-              </div>
-              <span className="text-sm text-gray-600">Section {section}/4</span>
-            </div>
-          </div>
+  // ── Dashboard ─────────────────────────────────────────────────────────────
+  const analysis = getAnalysis(data);
+  const supplements = getSupplements(data);
+  const communityData = getCommunityData(data.embryoOutcome);
 
-          <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-            {section === 1 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-light text-gray-800 mb-6">Basic IVF Context</h2>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Age?</label>
-                  <input type="number" value={data.age} onChange={(e) => setData({...data, age: e.target.value})} placeholder="Enter age" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">IVF cycles completed?</label>
-                  <input type="number" value={data.cycles} onChange={(e) => setData({...data, cycles: e.target.value})} placeholder="0 if first" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Pregnancy history (select all)</label>
-                  {[{key: 'chemical', label: 'Chemical pregnancy'}, {key: 'miscarriage', label: 'Miscarriage'}, {key: 'liveBirth', label: 'Live birth'}, {key: 'none', label: 'None'}].map(opt => (
-                    <label key={opt.key} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" checked={data.pregnancies[opt.key]} onChange={() => setData({...data, pregnancies: {...data.pregnancies, [opt.key]: !data.pregnancies[opt.key]}})} className="w-5 h-5 text-rose-500 rounded" />
-                      <span className="text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Current stage?</label>
-                  {[{value: 'preparing', label: 'Preparing for IVF'}, {value: 'between', label: 'Between cycles'}, {value: 'transfer', label: 'Preparing for transfer'}].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 hover:border-rose-300 cursor-pointer mb-2">
-                      <input type="radio" checked={data.stage === opt.value} onChange={() => setData({...data, stage: opt.value})} className="w-5 h-5 text-rose-500" />
-                      <span className="text-gray-700 font-medium">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {section === 2 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-light text-gray-800 mb-6">Embryo Development</h2>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Typical outcome?</label>
-                  {[
-                    {value: 'notYet', label: 'I have not done IVF yet'},
-                    {value: 'poorFertilisation', label: 'Poor fertilization'}, 
-                    {value: 'earlyArrest', label: 'Embryos arrest early'}, 
-                    {value: 'fewBlast', label: 'Few reach blast'}, 
-                    {value: 'failedImplantation', label: 'Good blasts, failed implantation'}
-                  ].map(opt => (
-                    <label key={opt.value} className="flex items-start gap-3 p-4 rounded-lg border-2 border-gray-200 hover:border-rose-300 cursor-pointer mb-2">
-                      <input type="radio" checked={data.embryoOutcome === opt.value} onChange={() => setData({...data, embryoOutcome: opt.value})} className="w-5 h-5 text-rose-500 mt-0.5" />
-                      <span className="text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Doctor comments (select all)</label>
-                  {[{value: 'unexplained', label: 'Unexplained'}, {value: 'normal', label: 'Everything looks normal'}, {value: 'eggQuality', label: 'Egg quality issue'}, {value: 'maleFactor', label: 'Male factor'}].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" checked={data.doctorComments.includes(opt.value)} onChange={() => handleMulti('doctorComments', opt.value)} className="w-5 h-5 text-rose-500 rounded" />
-                      <span className="text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {section === 3 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-light text-gray-800 mb-6">Known Factors</h2>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Diagnosed or suspected (select all)</label>
-                  {[{value: 'endometriosis', label: 'Endometriosis'}, {value: 'pcos', label: 'PCOS'}, {value: 'lowAmh', label: 'Low AMH'}, {value: 'autoimmune', label: 'Autoimmune'}, {value: 'thyroid', label: 'Thyroid'}].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" checked={data.knownFactors.includes(opt.value)} onChange={() => handleMulti('knownFactors', opt.value)} className="w-5 h-5 text-rose-500 rounded" />
-                      <span className="text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">High stress last 6-12 months?</label>
-                  {[{value: 'yes', label: 'Yes, significant'}, {value: 'no', label: 'No, stable'}].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 hover:border-rose-300 cursor-pointer mb-2">
-                      <input type="radio" checked={data.highStress === opt.value} onChange={() => setData({...data, highStress: opt.value})} className="w-5 h-5 text-rose-500" />
-                      <span className="text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {section === 4 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-light text-gray-800 mb-6">Current Approach</h2>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Currently doing (select all)</label>
-                  {[{value: 'supplements', label: 'Taking supplements'}, {value: 'diet', label: 'Following fertility diet'}, {value: 'everything', label: 'Trying to do everything'}, {value: 'unsure', label: 'Unsure what matters'}].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="checkbox" checked={data.currentApproach.includes(opt.value)} onChange={() => handleMulti('currentApproach', opt.value)} className="w-5 h-5 text-rose-500 rounded" />
-                      <span className="text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-3">Biggest fear? (optional)</label>
-                  <textarea value={data.biggestFear} onChange={(e) => setData({...data, biggestFear: e.target.value})} placeholder="Share what weighs on you" rows="4" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none" />
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-4 mt-8">
-              {section > 1 && <button onClick={() => setSection(s => s - 1)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 rounded-xl font-medium">Back</button>}
-              {section < 4 ? (
-                <button onClick={() => setSection(s => s + 1)} className="flex-1 bg-rose-500 hover:bg-rose-600 text-white py-4 rounded-xl font-medium flex items-center justify-center gap-2">Continue <ChevronRight className="w-5 h-5" /></button>
-              ) : (
-                <button onClick={() => setStep('dashboard')} disabled={!complete} className="flex-1 bg-rose-500 hover:bg-rose-600 disabled:bg-gray-300 text-white py-4 rounded-xl font-medium">View Plan</button>
-              )}
-            </div>
-          </div>
-
-          <SupportiveFooter />
-          <MedicalDisclaimer />
-        </div>
-      </div>
-    );
-  }
-
-  const analysis = getAnalysis();
-  const supplements = getSupplements();
+  const TABS = [
+    { id: 'plan',      Icon: Target,      label: 'Your Plan'  },
+    { id: 'today',     Icon: CheckCircle, label: 'Today'      },
+    { id: 'progress',  Icon: TrendingUp,  label: 'Progress'   },
+    { id: 'answers',   Icon: Search,      label: 'Answers'    },
+    { id: 'journal',   Icon: BookOpen,    label: 'Journal'    },
+    { id: 'community', Icon: Users,       label: 'Community'  },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6">
-      <div className="max-w-4xl mx-auto pb-12">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50">
+      <Confetti active={confetti} />
+      {milestoneToast && <MilestoneToast milestone={milestoneToast} onClose={() => setMilestoneToast(null)} />}
+
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Heart className="w-6 h-6 text-rose-500" />
-            <div>
-              <h1 className="text-2xl font-light text-gray-800">The Embryo Protocol</h1>
-              <p className="text-xs text-gray-500 italic">You're doing the best you can — and that's enough for today.</p>
-            </div>
+            <Heart className="w-6 h-6 text-rose-400" />
+            <h1 className="text-xl font-light text-gray-800">The Embryo Protocol</h1>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => setStep('assessment')} className="text-sm text-rose-600 hover:text-rose-700 flex items-center gap-1">
-              <Edit2 className="w-4 h-4" /> Update
-            </button>
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
-              <LogOut className="w-4 h-4" />
-              Log Out
-            </button>
+            <button onClick={() => { setStep('assessment'); setSection(1); }} className="text-sm text-rose-600 hover:text-rose-700 flex items-center gap-1"><Edit2 className="w-4 h-4" /> Update</button>
+            <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"><LogOut className="w-4 h-4" /> Log Out</button>
           </div>
         </div>
+      </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
-          {[
-            { id: 'plan', icon: Target, label: 'Your Plan' },
-            { id: 'today', icon: CheckCircle, label: 'Today' },
-            { id: 'progress', icon: TrendingUp, label: 'Progress' },
-            { id: 'answers', icon: Search, label: 'Answers' },
-            { id: 'journal', icon: BookOpen, label: 'Journal' },
-            { id: 'community', icon: Users, label: 'Community' }
-          ].map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap ${activeTab === tab.id ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-700'}`}>
-                <Icon className="w-4 h-4" />
-                <span className="text-sm">{tab.label}</span>
-              </button>
-            );
-          })}
+      {/* Tab nav */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex overflow-x-auto px-2">
+          {TABS.map(({ id, Icon, label }) => (
+            <button key={id} onClick={() => setActiveTab(id)} className={`flex items-center gap-1.5 px-4 py-3 font-medium whitespace-nowrap border-b-2 transition-colors text-sm ${activeTab === id ? 'border-rose-400 text-rose-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+              <Icon className="w-4 h-4" />{label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div className="space-y-6">
-          {activeTab === 'plan' && (
-            <>
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 italic">This is your personalised focus — based on your IVF journey, not generic advice.</p>
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+
+        {/* ══ YOUR PLAN ══════════════════════════════════════════════════════ */}
+        {activeTab === 'plan' && (
+          <>
+            <div className="bg-white rounded-2xl shadow-sm border p-8">
+              <h2 className="text-2xl font-light text-gray-800 mb-1">Your Personalised Plan</h2>
+              <p className="text-gray-500 text-sm mb-6">Based on your IVF journey, not generic advice.</p>
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-6">
+                <p className="text-xs text-purple-600 font-medium uppercase tracking-wide mb-1">Your Primary Bottleneck</p>
+                <p className="text-xl font-medium text-purple-800 mb-3">{analysis.bottleneck}</p>
+                <p className="text-gray-600">{analysis.priority}</p>
               </div>
-
-              <div className="bg-gradient-to-r from-rose-500 to-purple-500 rounded-2xl p-8 text-white mb-6">
-                <div className="flex items-start gap-2 mb-2">
-                  <h2 className="text-xl font-medium flex-1">Your Primary Bottleneck</h2>
-                  <span className="text-xs opacity-80">This highlights the main area your embryos may need support right now.</span>
+              {analysis.extras.length > 0 && (
+                <div className="space-y-3 mb-6">
+                  <h3 className="font-medium text-gray-800">Specific to your situation</h3>
+                  {analysis.extras.map((e, i) => <div key={i} className="bg-rose-50 border border-rose-200 rounded-lg p-4 text-sm text-gray-700">{e}</div>)}
                 </div>
-                <p className="mb-3">{analysis.bottleneck}</p>
-                <p className="text-sm opacity-90 italic">This isn't about blame. It's about clarity — so you know where to focus.</p>
+              )}
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-800">Your Top 3 Priorities</h3>
+                {[
+                  { n: 1, t: 'Mitochondrial Support', d: '90-day CoQ10 protocol at therapeutic dose' },
+                  { n: 2, t: 'Reduce Oxidative Stress', d: 'Diet, lifestyle, and targeted antioxidants' },
+                  { n: 3, t: 'Address Your Bottleneck', d: analysis.bottleneck + ' — targeted supplement protocol' },
+                ].map(p => (
+                  <div key={p.n} className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-rose-100 rounded-full flex items-center justify-center text-rose-600 font-bold flex-shrink-0">{p.n}</div>
+                    <div><p className="font-medium text-gray-800">{p.t}</p><p className="text-sm text-gray-600">{p.d}</p></div>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-                <h2 className="text-xl font-medium mb-2">Top 3 Priorities</h2>
-                <p className="text-sm text-gray-600 mb-4 italic">If everything feels overwhelming, start here. You don't need to do everything — just these.</p>
-                {analysis.priorities.map((p, i) => (
-                  <div key={i} className="flex gap-3 p-4 bg-rose-50 rounded-lg mb-3">
-                    <div className="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center font-medium flex-shrink-0">{i + 1}</div>
-                    <div className="flex-1">
-                      <p className="text-gray-700">{p}</p>
-                      <p className="text-xs text-gray-500 mt-1 italic">Small, consistent steps matter more than perfection.</p>
+            <div className="bg-white rounded-2xl shadow-sm border p-8">
+              <h2 className="text-2xl font-light mb-2">Your Supplement Protocol</h2>
+              <p className="text-sm text-gray-500 mb-6">Supplements are supportive, not magic — consistency is everything.</p>
+              <h3 className="font-medium text-gray-700 mb-3">For you</h3>
+              <div className="space-y-3 mb-6">
+                {supplements.hers.map((s, i) => <div key={i} className="p-4 bg-rose-50 rounded-lg"><p className="font-medium text-gray-800">{s.name}</p><p className="text-sm text-gray-600">{s.dose} · {s.timing}</p><p className="text-xs text-gray-500 mt-1">{s.why}</p></div>)}
+              </div>
+              <h3 className="font-medium text-gray-700 mb-3">For your partner</h3>
+              <div className="space-y-3">
+                {supplements.his.map((s, i) => <div key={i} className="p-4 bg-blue-50 rounded-lg"><p className="font-medium text-gray-800">{s.name}</p><p className="text-sm text-gray-600">{s.dose} · {s.timing}</p><p className="text-xs text-gray-500 mt-1">{s.why}</p></div>)}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border p-8 space-y-6">
+              <h2 className="text-2xl font-light mb-2">Focus Areas</h2>
+              <FocusSection title="Nutrition" color="rose" items={[
+                { label: 'Mediterranean-style diet', detail: 'Prioritise vegetables, legumes, fish, olive oil, nuts and seeds. High in antioxidants and anti-inflammatory foods. Evidence shows improved IVF outcomes.' },
+                { label: 'Protein with every meal', detail: 'Aim for 25–30g protein per meal from eggs, fish, legumes, or quality meat. Protein provides the amino acid building blocks for egg and embryo development.' },
+                { label: 'Avoid ultra-processed foods', detail: 'Eliminate trans fats, excessive sugar, and seed oils. These increase systemic inflammation which directly affects reproductive health.' },
+              ]} />
+              <FocusSection title="Lifestyle" color="purple" items={[
+                { label: 'Sleep 8 hours minimum', detail: 'Sleep is when cellular repair happens. Melatonin produced during sleep is a powerful antioxidant that reaches follicular fluid directly.' },
+                { label: 'Movement — not intense exercise', detail: 'Gentle, regular movement supports blood flow to ovaries and reduces cortisol. Avoid high-intensity training during stimulation and TWW.' },
+                { label: 'Eliminate alcohol', detail: 'Even moderate alcohol consumption increases oxidative stress and affects hormonal balance. The evidence for abstinence during IVF preparation is strong.' },
+              ]} />
+              <FocusSection title="Stress Management" color="blue" items={[
+                { label: 'Daily stress reduction practice', detail: 'Chronic cortisol suppresses reproductive hormones. Even 10 minutes of breathwork, meditation, or gentle yoga daily reduces cortisol measurably.' },
+                { label: 'Set information boundaries', detail: 'Constant research increases anxiety without improving outcomes. Designate one time per day for IVF-related reading, then close it.' },
+                { label: 'Community over isolation', detail: 'IVF can be isolating. Connecting with others in the same situation reduces the psychological burden significantly.' },
+              ]} />
+            </div>
+            <MedicalDisclaimer />
+          </>
+        )}
+
+        {/* ══ TODAY ══════════════════════════════════════════════════════════ */}
+        {activeTab === 'today' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Stage header */}
+            <div style={{ background: `linear-gradient(135deg, ${C.plum2} 0%, ${C.plum} 60%, ${C.terracotta} 100%)`, borderRadius: 20, padding: '20px 20px 16px', color: C.white }}>
+              <div style={{ fontSize: 11, opacity: 0.75, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>Daily Tracker</div>
+              <div style={{ fontSize: 18, fontFamily: 'Georgia, serif', marginBottom: 12 }}>{STAGE_LABELS[data.currentStage]}</div>
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 100, height: 8, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${completionPct}%`, backgroundColor: C.gold, borderRadius: 100, transition: 'width 0.5s ease' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, opacity: 0.85 }}>
+                <span>{completedCount} of {tasks.length} done today</span>
+                <span>{completionPct}%</span>
+              </div>
+            </div>
+
+            {/* Streak card */}
+            <div style={{ backgroundColor: C.white, borderRadius: 20, padding: 20, border: '1.5px solid #EAE5DF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 26 }}>{streak >= 30 ? '🔥🔥' : streak >= 14 ? '🔥' : streak >= 7 ? '✨' : '🌱'}</span>
+                <div>
+                  <div style={{ fontSize: 30, fontWeight: 800, color: streak >= 7 ? C.terracotta : C.charcoal, fontFamily: 'Georgia, serif', lineHeight: 1 }}>{streak}</div>
+                  <div style={{ fontSize: 11, color: C.muted, letterSpacing: 1, textTransform: 'uppercase' }}>day streak</div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 12, color: C.muted }}>Total days</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: C.plum, fontFamily: 'Georgia, serif' }}>{totalDays}</div>
+              </div>
+            </div>
+
+            <WaterTracker glasses={water} onSet={setWater} />
+            <MoodTracker mood={mood} onSet={setMood} />
+
+            {/* Tasks grouped by category */}
+            {['supplement','nutrition','lifestyle','mindset'].map(cat => {
+              const catTasks = tasks.filter(t => t.category === cat);
+              if (!catTasks.length) return null;
+              const col = CAT_COLORS[cat];
+              const catDone = catTasks.filter(t => checked[t.id]).length;
+              return (
+                <div key={cat}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: col.dot }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: col.dot, textTransform: 'uppercase', letterSpacing: 1 }}>{col.label}</span>
+                    <span style={{ fontSize: 12, color: C.muted }}>({catDone}/{catTasks.length})</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {catTasks.map(t => <TaskCard key={t.id} task={t} checked={!!checked[t.id]} onToggle={() => toggleTask(t.id)} animating={!!animating[t.id]} />)}
+                  </div>
+                </div>
+              );
+            })}
+
+            {completionPct === 100 && (
+              <div style={{ backgroundColor: C.terracotta, borderRadius: 20, padding: 24, textAlign: 'center', color: C.white }}>
+                <div style={{ fontSize: 36, marginBottom: 8 }}>🌸</div>
+                <div style={{ fontSize: 18, fontFamily: 'Georgia, serif', marginBottom: 6 }}>Perfect day complete!</div>
+                <div style={{ fontSize: 14, opacity: 0.9 }}>Every action today is an investment. You showed up. That matters.</div>
+              </div>
+            )}
+
+            <MedicalDisclaimer />
+          </div>
+        )}
+
+        {/* ══ PROGRESS ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'progress' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ backgroundColor: C.white, borderRadius: 20, padding: 24, border: '1.5px solid #EAE5DF' }}>
+              <h2 style={{ margin: '0 0 20px', fontSize: 22, fontFamily: 'Georgia, serif', fontWeight: 400, color: C.charcoal }}>Your Journey So Far</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                {[
+                  { val: streak,           label: 'Day Streak', color: C.terracotta, icon: '🔥' },
+                  { val: totalDays,        label: 'Total Days',  color: C.plum,       icon: '📅' },
+                  { val: `${completionPct}%`, label: 'Today',   color: C.sage,       icon: '✓'  },
+                ].map(s => (
+                  <div key={s.label} style={{ backgroundColor: C.cream, borderRadius: 14, padding: 16, textAlign: 'center' }}>
+                    <div style={{ fontSize: 22 }}>{s.icon}</div>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: s.color, fontFamily: 'Georgia, serif', lineHeight: 1.2, marginTop: 4 }}>{s.val}</div>
+                    <div style={{ fontSize: 11, color: C.muted, marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.8 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: C.white, borderRadius: 20, padding: 20, border: '1.5px solid #EAE5DF' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600, color: C.charcoal }}>This Week</h3>
+              <WeekCalendar completionHistory={completionHistory} />
+              <div style={{ marginTop: 14, display: 'flex', gap: 16, fontSize: 12, color: C.muted }}>
+                <span><span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, backgroundColor: C.terracotta, marginRight: 4, verticalAlign: 'middle' }} />80%+ complete</span>
+                <span><span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, backgroundColor: '#E8A87C', marginRight: 4, verticalAlign: 'middle' }} />40–79%</span>
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: '#FDF0EA', borderRadius: 20, padding: 20, border: '1.5px solid #E8B89A' }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 600, color: C.terracotta }}>⏰ The 90-Day Rule</h3>
+              <p style={{ margin: 0, fontSize: 14, color: '#7A4A2E', lineHeight: 1.6 }}>Egg maturation takes 90 days. Every supplement you take today is investing in eggs that will be collected 3 months from now. You won't feel it — but it's happening.</p>
+              {streak > 0 && <div style={{ marginTop: 12, fontSize: 13, color: C.terracotta, fontWeight: 600 }}>
+                You're {streak} day{streak !== 1 ? 's' : ''} in. {90 - streak > 0 ? `${90 - streak} days to full cycle impact.` : "You've completed a full egg maturation cycle! 🏆"}
+              </div>}
+            </div>
+
+            <div style={{ backgroundColor: C.white, borderRadius: 20, padding: 20, border: '1.5px solid #EAE5DF' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600, color: C.charcoal }}>🏆 Milestones</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {MILESTONES.map(m => {
+                  const unlocked = streak >= m.days;
+                  return (
+                    <div key={m.days} style={{
+                      backgroundColor: unlocked ? '#FDF8F5' : '#F8F5F1', borderRadius: 14, padding: '14px 18px',
+                      border: `1.5px solid ${unlocked ? C.terracotta : '#EAE5DF'}`,
+                      display: 'flex', alignItems: 'center', gap: 14, opacity: unlocked ? 1 : 0.55,
+                    }}>
+                      <span style={{ fontSize: 26 }}>{unlocked ? m.icon : '🔒'}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: unlocked ? C.charcoal : C.muted }}>{m.label}</div>
+                        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{unlocked ? m.msg : `${m.days - streak} more days`}</div>
+                      </div>
+                      {unlocked && <span style={{ color: C.terracotta, fontSize: 18 }}>✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <MedicalDisclaimer />
+          </div>
+        )}
+
+        {/* ══ ANSWERS ════════════════════════════════════════════════════════ */}
+        {activeTab === 'answers' && (
+          <div className="bg-white rounded-2xl shadow-sm border p-8">
+            <h2 className="text-2xl font-light mb-2">Quick Answers</h2>
+            <p className="text-sm text-gray-500 mb-6">If you've wondered it — you're not alone.</p>
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <input type="text" value={questionSearch} onChange={e => setQuestionSearch(e.target.value)} placeholder="Search questions..." className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-400 outline-none" />
+            </div>
+            <div className="space-y-3">
+              {faqs.filter(f => questionSearch === '' || f.q.toLowerCase().includes(questionSearch.toLowerCase())).map((f, i) => (
+                <details key={i} className="group border rounded-lg">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 list-none">
+                    <span className="font-medium text-gray-800 pr-4">{f.q}</span>
+                    <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  </summary>
+                  <div className="p-4 bg-gray-50 border-t text-sm text-gray-700 leading-relaxed">{f.a}</div>
+                </details>
+              ))}
+            </div>
+            <MedicalDisclaimer />
+          </div>
+        )}
+
+        {/* ══ JOURNAL ════════════════════════════════════════════════════════ */}
+        {activeTab === 'journal' && (
+          <div className="bg-white rounded-2xl shadow-sm border p-8">
+            <h2 className="text-2xl font-light mb-2">Your Journal</h2>
+            <p className="text-sm text-gray-500 mb-6">This space is just for you. No judgement. No fixing. Just honesty.</p>
+            <textarea value={journalText} onChange={e => setJournalText(e.target.value)} placeholder="How are you feeling today?" rows="6" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-400 outline-none resize-none mb-4" />
+            <button onClick={() => {
+              if (journalText.trim()) {
+                setData(d => ({ ...d, journalEntries: [{ date: new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), text: journalText }, ...d.journalEntries] }));
+                setJournalText('');
+              }
+            }} className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg transition-colors">Save Entry</button>
+            <div className="mt-6 space-y-4">
+              <h3 className="font-medium text-gray-800">Previous Entries</h3>
+              {data.journalEntries.length === 0
+                ? <p className="text-gray-400 text-sm py-4">No entries yet. Start journaling to track your journey.</p>
+                : data.journalEntries.map((e, i) => (
+                  <div key={i} className="p-4 bg-gray-50 rounded-lg border">
+                    <p className="text-xs text-gray-400 mb-2">{e.date}</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{e.text}</p>
+                  </div>
+                ))}
+            </div>
+            <MedicalDisclaimer />
+          </div>
+        )}
+
+        {/* ══ COMMUNITY ══════════════════════════════════════════════════════ */}
+        {activeTab === 'community' && (
+          <>
+            <div className="bg-white rounded-2xl shadow-sm border p-8">
+              <h2 className="text-2xl font-light text-gray-800 mb-2">You Are Not Alone</h2>
+              <p className="text-gray-500 text-sm mb-6">Data from women with your exact bottleneck pattern — all anonymous</p>
+              <div className="p-6 bg-rose-50 rounded-xl border border-rose-200 mb-6">
+                <h3 className="font-medium text-gray-800 mb-4">Women with your pattern</h3>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-rose-500">{communityData.count}</p>
+                    <p className="text-xs text-gray-500 mt-1">Women tracking this</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-purple-500">{communityData.successRate}%</p>
+                    <p className="text-xs text-gray-500 mt-1">Improved outcomes</p>
+                  </div>
+                </div>
+                <h4 className="font-medium text-gray-700 mb-3">What made the difference</h4>
+                {communityData.topActions.map((a, i) => (
+                  <div key={i} className="mb-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-gray-700 flex-1 pr-4">{a.action}</span>
+                      <span className="text-sm font-medium text-rose-600 flex-shrink-0">{a.pct}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-rose-400 h-2 rounded-full transition-all" style={{ width: `${a.pct}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-                <h2 className="text-xl font-medium mb-2">Personalized Supplements</h2>
-                <p className="text-xs text-gray-600 mb-4 italic">Supplements are supportive, not magic. Always follow guidance from your medical team.</p>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-medium mb-4 pb-2 border-b">For Him</h3>
-                    {supplements.his.map((s, i) => (
-                      <div key={i} className="p-3 bg-blue-50 rounded-lg mb-2">
-                        <p className="text-sm font-medium">{s.name}</p>
-                        <p className="text-xs text-gray-600 mt-1">{s.why}</p>
-                      </div>
-                    ))}
+              <div>
+                <h3 className="font-medium text-gray-800 mb-4">From women in your situation</h3>
+                {communityData.stories.map((s, i) => (
+                  <div key={i} className="bg-purple-50 border border-purple-100 rounded-xl p-5 mb-4">
+                    <p className="text-gray-700 text-sm leading-relaxed mb-3">"{s.text}"</p>
+                    <p className="text-xs text-purple-600 font-medium">{s.stage}</p>
                   </div>
-                  <div>
-                    <h3 className="font-medium mb-4 pb-2 border-b">For Her</h3>
-                    {supplements.her.map((s, i) => (
-                      <div key={i} className="p-3 bg-rose-50 rounded-lg mb-2">
-                        <p className="text-sm font-medium">{s.name}</p>
-                        <p className="text-xs text-gray-600 mt-1">{s.why}</p>
-                        <p className="text-xs text-gray-500 mt-1">Stop: {s.stop}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-4 italic">If this feels like too much, focus on consistency over complexity.</p>
+                ))}
               </div>
+            </div>
+            <MedicalDisclaimer />
+          </>
+        )}
 
-              <div className="bg-white rounded-2xl shadow-sm border p-8 mb-6">
-                <h2 className="text-xl font-medium mb-2">Your Focus Plan</h2>
-                <p className="text-sm text-gray-600 mb-6 italic">Click into any area below for gentle guidance. You don't need to tackle everything at once.</p>
-                <div className="space-y-4">
-                  <div className="mb-2">
-                    <p className="text-xs text-gray-500 italic mb-3">This is about nourishment, not restriction.</p>
-                  </div>
-                  <FocusSection 
-                    title="Nutrition" 
-                    color="rose"
-                    items={[
-                      { label: 'Mediterranean eating', detail: 'Focus on colorful vegetables (7-9 servings daily), wild fatty fish 3x weekly, extra virgin olive oil (2-3 tbsp daily), nuts, seeds, legumes, whole grains. Minimize red meat, processed foods, refined sugars.' },
-                      { label: 'Reduce inflammatory foods', detail: 'Eliminate or minimize: processed foods, excess sugar and refined carbs, trans fats, excessive alcohol, high-mercury fish. Watch for sensitivities to gluten and dairy.' },
-                      { label: 'Blood sugar balance', detail: 'Every meal: quality protein (eggs, fish, poultry, legumes) plus healthy fats (avocado, nuts, olive oil, seeds) plus fiber-rich carbs. Eat within 1 hour of waking.' },
-                      { label: 'Hydration', detail: '2-3L filtered water daily. Start day with 16oz water. Add lemon for vitamin C, cucumber for minerals, or pinch of sea salt for electrolytes. Limit caffeine to 200mg daily.' }
-                    ]}
-                  />
-                  
-                  <div className="mb-2">
-                    <p className="text-xs text-gray-500 italic mb-3">Support your body — not punish it.</p>
-                  </div>
-                  <FocusSection 
-                    title="Lifestyle" 
-                    color="purple"
-                    items={[
-                      { label: 'Sleep 7-8 hours', detail: 'Critical for egg quality. Create routine: same bedtime, dark room, cool temperature (65-68F), no screens 1 hour before bed. Consider magnesium glycinate 300mg before bed.' },
-                      { label: 'Movement 30min daily', detail: data.stage === 'transfer' ? 'Gentle walking, restorative yoga, stretching, swimming. Avoid running, HIIT, hot yoga, heavy lifting.' : 'Walking, gentle yoga, swimming, cycling, pilates. Moderate intensity OK. Avoid excessive high intensity.' },
-                      { label: 'Toxin reduction', detail: 'Beauty: use EWG Skin Deep database, choose products scoring 0-2. Cleaning: vinegar, baking soda, castile soap. Avoid parabens, phthalates, BPA. Use glass or stainless steel storage.' },
-                      { label: 'Temperature awareness', detail: data.stage === 'transfer' ? 'No hot baths over 101F, saunas, hot tubs, hot yoga. Warm baths under 100F are fine. Keep laptop off lap.' : 'Avoid hot baths over 101F, saunas, hot tubs. Partner should also avoid heat for sperm quality. Warm showers under 100F OK.' }
-                    ]}
-                  />
-                  
-                  <div className="mb-2">
-                    <p className="text-xs text-gray-500 italic mb-3">Stress doesn't cause infertility — but calming your nervous system supports healing.</p>
-                  </div>
-                  <FocusSection 
-                    title="Stress Management" 
-                    color="blue"
-                    items={[
-                      { label: 'Daily meditation 10min', detail: 'Try Insight Timer, Headspace, Calm. Start with 5min if 10 feels long. Best times: morning or evening. Consistency over duration.', hasAudio: true, audioNote: 'Custom fertility meditation audios:', audioLinks: MEDITATION_LINKS},
-                      { label: 'Set boundaries', detail: 'OK to skip baby showers, decline questions, limit social media. Script: I appreciate your interest, but IVF is private. I will share when ready. Protect your peace.' },
-                      { label: 'Get support', detail: 'Therapist specializing in fertility (Psychology Today), support groups (Resolve.org), trusted friends. Partner support is key - schedule regular check-ins.' },
-                      { label: 'Couple connection', detail: 'Schedule weekly non-IVF dates (even 30min walk). Talk feelings, not just logistics. Physical intimacy without pressure. Consider couples counseling if struggling.' }
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <SupportiveFooter />
-              <MedicalDisclaimer />
-            </>
-          )}
-
-          {activeTab === 'today' && (
-            <>
-              <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light mb-2">Today's Check-in</h2>
-                <p className="text-gray-600 text-sm mb-6 italic">Building consistency, one gentle day at a time.</p>
-                
-                <div className="space-y-4">
-                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                    <input type="checkbox" checked={todayCheckin.supplements} onChange={() => {
-                      setTodayCheckin({...todayCheckin, supplements: !todayCheckin.supplements});
-                      if (!todayCheckin.supplements) {
-                        setData(prev => ({...prev, progressTracking: {...prev.progressTracking, supplementDays: prev.progressTracking.supplementDays + 1}}));
-                      }
-                    }} className="w-6 h-6 text-rose-500 rounded" />
-                    <div>
-                      <p className="font-medium text-gray-800">Took my supplements</p>
-                      <p className="text-xs text-gray-600">Building egg and sperm quality takes consistency</p>
-                      <p className="text-xs text-gray-500 italic mt-1">Even showing up imperfectly still counts.</p>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                    <input type="checkbox" checked={todayCheckin.meditation} onChange={() => {
-                      setTodayCheckin({...todayCheckin, meditation: !todayCheckin.meditation});
-                      if (!todayCheckin.meditation) {
-                        setData(prev => ({...prev, progressTracking: {...prev.progressTracking, meditationDays: prev.progressTracking.meditationDays + 1}}));
-                      }
-                    }} className="w-6 h-6 text-rose-500 rounded" />
-                    <div>
-                      <p className="font-medium text-gray-800">Practiced mindfulness or meditation</p>
-                      <p className="text-xs text-gray-600">Even 5 minutes counts</p>
-                      <p className="text-xs text-gray-500 italic mt-1">Five minutes is enough. You're allowed to keep this simple.</p>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                    <input type="checkbox" checked={todayCheckin.exercise} onChange={() => {
-                      setTodayCheckin({...todayCheckin, exercise: !todayCheckin.exercise});
-                      if (!todayCheckin.exercise) {
-                        setData(prev => ({...prev, progressTracking: {...prev.progressTracking, exerciseDays: prev.progressTracking.exerciseDays + 1}}));
-                      }
-                    }} className="w-6 h-6 text-rose-500 rounded" />
-                    <div>
-                      <p className="font-medium text-gray-800">Moved my body (30min)</p>
-                      <p className="text-xs text-gray-600">Walking, yoga, swimming - gentle movement</p>
-                      <p className="text-xs text-gray-500 italic mt-1">Gentle movement supports blood flow and emotional release.</p>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="mt-6 p-6 bg-gradient-to-r from-purple-50 to-rose-50 rounded-xl">
-                  <h3 className="font-medium text-gray-800 mb-1">Your commitment over time adds up</h3>
-                  <p className="text-xs text-gray-500 italic mb-3">— even on hard days.</p>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-white rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-rose-500">{data.progressTracking.supplementDays}</p>
-                      <p className="text-xs text-gray-600 mt-1">Days on supplements</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-purple-500">{data.progressTracking.meditationDays}</p>
-                      <p className="text-xs text-gray-600 mt-1">Mindfulness sessions</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-blue-500">{data.progressTracking.exerciseDays}</p>
-                      <p className="text-xs text-gray-600 mt-1">Movement days</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <SupportiveFooter />
-              <MedicalDisclaimer />
-            </>
-          )}
-
-          {activeTab === 'progress' && (
-            <>
-              <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light text-gray-800 mb-2">Your Progress</h2>
-                <p className="text-gray-600 text-sm mb-6 italic">Every small action is an investment in your future.</p>
-                
-                <div className="grid md:grid-cols-3 gap-4 mb-6">
-                  <div className="p-6 bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Award className="w-6 h-6 text-rose-600" />
-                      <p className="font-medium text-gray-800">Supplement Streak</p>
-                    </div>
-                    <p className="text-3xl font-bold text-rose-600">{data.progressTracking.supplementDays} days</p>
-                    <p className="text-xs text-gray-600 mt-2">Keep going! Peak benefit at 90+ days</p>
-                    <p className="text-xs text-gray-500 italic mt-1">Consistency matters more than intensity.</p>
-                  </div>
-
-                  <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Heart className="w-6 h-6 text-purple-600" />
-                      <p className="font-medium text-gray-800">Self-Care Sessions</p>
-                    </div>
-                    <p className="text-3xl font-bold text-purple-600">{data.progressTracking.meditationDays}</p>
-                    <p className="text-xs text-gray-600 mt-2">You are prioritizing your wellbeing</p>
-                    <p className="text-xs text-gray-500 italic mt-1">Caring for yourself is part of the process — not a distraction from it.</p>
-                  </div>
-
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
-                    <div className="flex items-center gap-3 mb-2">
-                      <TrendingUp className="w-6 h-6 text-blue-600" />
-                      <p className="font-medium text-gray-800">Active Days</p>
-                    </div>
-                    <p className="text-3xl font-bold text-blue-600">{data.progressTracking.exerciseDays}</p>
-                    <p className="text-xs text-gray-600 mt-2">Movement supports blood flow and mood</p>
-                    <p className="text-xs text-gray-500 italic mt-1">Movement supports both your body and your mind.</p>
-                  </div>
-                </div>
-
-                <div className="text-center py-4">
-                  <p className="text-sm text-gray-600 italic">Progress isn't linear. You're still moving forward.</p>
-                </div>
-              </div>
-
-              <SupportiveFooter />
-              <MedicalDisclaimer />
-            </>
-          )}
-
-          {activeTab === 'answers' && (
-            <>
-              <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light mb-2">Quick Answers</h2>
-                <p className="text-sm text-gray-600 mb-6 italic">These are common questions many women ask during IVF. If you've wondered it — you're not alone.</p>
-                <div className="relative mb-6">
-                  <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input type="text" value={questionSearch} onChange={(e) => setQuestionSearch(e.target.value)} placeholder="Type a question you've been holding in your head…" className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none" />
-                </div>
-                <div className="space-y-3">
-                  {faqs.filter(faq => questionSearch === '' || faq.q.toLowerCase().includes(questionSearch.toLowerCase())).map((faq, i) => (
-                    <details key={i} className="group border rounded-lg">
-                      <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50">
-                        <span className="font-medium text-gray-800">{faq.q}</span>
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
-                      </summary>
-                      <div className="p-4 bg-gray-50 border-t">
-                        <p className="text-sm text-gray-700">{faq.a}</p>
-                        <p className="text-xs text-gray-500 italic mt-2">This is educational support, not medical advice. Always check with your care team.</p>
-                      </div>
-                    </details>
-                  ))}
-                </div>
-              </div>
-
-              <SupportiveFooter />
-              <MedicalDisclaimer />
-            </>
-          )}
-
-          {activeTab === 'journal' && (
-            <>
-              <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light mb-2">Your Journal</h2>
-                <p className="text-sm text-gray-600 mb-4 italic">This space is just for you. No judgement. No fixing. Just honesty.</p>
-                <textarea value={journalText} onChange={(e) => setJournalText(e.target.value)} placeholder="What's been weighing on you lately?" rows="6" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-rose-500 outline-none resize-none mb-4" />
-                <button onClick={() => {
-                  if (journalText.trim()) {
-                    setData({...data, journalEntries: [{date: new Date().toLocaleDateString(), text: journalText}, ...data.journalEntries]});
-                    setJournalText('');
-                  }
-                }} className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg">Save Entry</button>
-                {journalText && (
-                  <p className="text-xs text-gray-500 italic mt-2">Your thoughts are safe here.</p>
-                )}
-                <div className="mt-6 space-y-4">
-                  <h3 className="font-medium text-gray-800">Previous Entries</h3>
-                  {data.journalEntries.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4">No entries yet. Start journaling to track your journey.</p>
-                  ) : (
-                    data.journalEntries.map((entry, i) => (
-                      <div key={i} className="p-4 bg-gray-50 rounded-lg border">
-                        <p className="text-xs text-gray-500 mb-2">{entry.date}</p>
-                        <p className="text-sm text-gray-700">{entry.text}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <SupportiveFooter />
-              <MedicalDisclaimer />
-            </>
-          )}
-
-          {activeTab === 'community' && (
-            <>
-              <div className="bg-white rounded-2xl shadow-sm border p-8">
-                <h2 className="text-2xl font-light text-gray-800 mb-2">You Are Not Alone</h2>
-                <p className="text-gray-600 text-sm mb-6 italic">You're not alone — even when IVF feels isolating.</p>
-                
-                {(() => {
-                  const community = getCommunityData();
-                  return (
-                    <div className="space-y-6">
-                      <div className="p-6 bg-rose-50 rounded-xl border border-rose-200">
-                        <h3 className="font-medium text-gray-800 mb-1">Women with {community.pattern}</h3>
-                        <p className="text-xs text-gray-500 mb-3 italic">Data from women who shared your embryo challenges</p>
-                        <div className="space-y-3">
-                          <div className="flex items-start gap-3">
-                            <Users className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm text-gray-700"><span className="font-medium">{community.count} women</span> with {community.pattern}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm text-gray-700"><span className="font-medium">{community.successRate}</span> {community.successMetric}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <Heart className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm text-gray-700">Average optimization time: <span className="font-medium">{community.avgTime}</span></p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-6 bg-purple-50 rounded-xl border border-purple-200">
-                        <h3 className="font-medium text-gray-800 mb-3">What helped them most</h3>
-                        <div className="space-y-2">
-                          {community.topActions.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg">
-                              <span className="text-sm text-gray-700">{item.action}</span>
-                              <span className="text-sm font-medium text-purple-600">{item.percent}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="p-6 bg-blue-50 rounded-xl border border-blue-200">
-                        <h3 className="font-medium text-gray-800 mb-1">Real Stories (Anonymous)</h3>
-                        <p className="text-xs text-gray-500 mb-3 italic">From women who had the same bottleneck as you</p>
-                        <div className="space-y-4">
-                          {community.stories.map((story, idx) => (
-                            <div key={idx} className="p-4 bg-white rounded-lg">
-                              <p className="text-sm text-gray-700 italic mb-2">{story.text}</p>
-                              <p className="text-xs text-gray-500">— Age {story.age}, {story.diagnosis}, {story.cycles} cycles</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                </div>
-                  );
-                })()}
-              </div>
-
-              <SupportiveFooter />
-              <MedicalDisclaimer />
-            </>
-          )}
-        </div>
       </div>
     </div>
   );
-};
-
-export default IVFJourneyTool;
+}
